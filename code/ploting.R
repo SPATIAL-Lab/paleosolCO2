@@ -1,15 +1,36 @@
 source("code/helpers.R")
+load("bigout/post.Rda")
 
-# Read and parse data
-## Read data
-td = read.csv("data/BBNP_data.csv")
+View(post$BUGSoutput$summary)
 
-## Propagate measurement, within outcrop, and within age bin uncertainties
-td$d18O.stdev = sqrt(td$d18O.stdev ^ 2 + 0.4 ^ 2 + 1 ^ 1)
-td$d13C.stdev = sqrt(td$d13C.stdev ^ 2 + 0.4 ^ 2 + 1 ^ 1)
+plot.jpi(ages, post$BUGSoutput$sims.list$pCO2)
+points(ages, rep(min(post$BUGSoutput$sims.list$pCO2), 
+                 length(ages)), col = si)
 
-## Make ages negative
-td$Age = -td$Age
+plot.jpi(ages, log(post$BUGSoutput$sims.list$S_z))
+points(ages, rep(0, length(ages)), col = si)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$DIFC)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$d13Cr, ylim = c(-35, 0))
+points(d13Cc$age, d13Cc$d13Cc, col = d13Cc$si)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$GMT)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$d13Ca)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$MAT[, 1,])
+
+plot.jpi(ages, post$BUGSoutput$sims.list$MAP[, 1,])
+
+plot.jpi(ages, post$BUGSoutput$sims.list$ha[, 1,])
+
+plot.jpi(ages, post$BUGSoutput$sims.list$z_m)
+
+plot(post$BUGSoutput$sims.list$ha[, 1,], post$BUGSoutput$sims.list$PPCQ[, 1,])
+plot(post$BUGSoutput$sims.list$ha[, 1,], post$BUGSoutput$sims.list$MAP[, 1,])
+
+
 
 pal = c("#0099FF", "#5Dc863")
 
