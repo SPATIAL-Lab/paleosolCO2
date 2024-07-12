@@ -40,10 +40,10 @@ ai = function(){
 }
 
 
-plot.jpi = function(x, y, n = 500, ...){
+plot.jpi = function(x, y, n = 500, ylim = range(y), ...){
   # x = timeseries ages, y = simslist matrix
   inds = sample(seq_along(y[, 1]), n)
-  plot(x, y[inds[1],], type = "l", xlab = "Age", ylim = range(y), 
+  plot(x, y[inds[1],], type = "l", xlab = "Age", ylim = ylim, 
        col = rgb(0, 0, 0, 0.05), ...)
   for(i in inds[-1]){
     lines(x, y[i,], col = rgb(0, 0, 0, 0.1))
