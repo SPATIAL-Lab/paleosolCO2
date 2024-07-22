@@ -169,7 +169,7 @@ model{
     ha.eps[i] ~ dnorm(ha.eps[i - 1] * (ha.phi ^ dt), ha.pc[i])
     ha.pc[i] = ha.tau * ((1 - ha.phi ^ 2) / (1 - ha.phi ^ (2 * dt)))
     
-    f_R[i] = max(min(f_R.p[i], 0.3), 0.02)
+    f_R[i] = max(min(f_R.p[i], 0.15), 0.02)
     f_R.p[i] = f_R[i - 1] + f_R.eps[i]
     f_R.eps[i] ~ dnorm(f_R.eps[i - 1] * (f_R.phi ^ dt), f_R.pc[i])
     f_R.pc[i] = f_R.tau * ((1 - f_R.phi ^ 2) / (1 - f_R.phi ^ (2 * dt)))
@@ -220,30 +220,31 @@ model{
   d18.p[1] = -17 + 0.58 * (MAT[1] * (1 - PCQ_pf[1]) +
                              Tair_PCQ[1] * PCQ_pf[1]) + MAP[1] / 250 # Precipitation d18O, ppt
   PPCQ[1] = MAP[1] * PCQ_pf[1] 
-  Tair_PCQ[1] = MAT[1] + PCQ_to[1] 
+  h_m[1] = 0.25 + 0.7 * (PPCQ[1] / 900)
+  Tair_PCQ[1] = MAT[1] + PCQ_to[1]
 
   ## Primary environmental ----
-  pCO2[1] ~ dunif(600, 1200) # atmospheric CO2 mixing ratio
+  pCO2[1] ~ dunif(150, 400) # atmospheric CO2 mixing ratio
   pCO2.eps[1] = 0
-  MAT[1] ~ dunif(10, 30) # terrestrial temperature, C
+  MAT[1] ~ dunif(0, 15) # terrestrial temperature, C
   MAT.eps[1] = 0
-  PCQ_to[1] ~ dunif(-2, 14) # PCQ temperature offset, C
+  PCQ_to[1] ~ dunif(10, 15) # PCQ temperature offset, C
   PCQ_to.eps[1] = 0
-  MAP[1] ~ dunif(500, 1200) # mean annual terrestrial site precipitation, mm
+  MAP[1] ~ dunif(250, 750) # mean annual terrestrial site precipitation, mm
   MAP.eps[1] = 0
-  PCQ_pf[1] ~ dunif(0.05, 0.2) # PCQ precipitation fraction
+  PCQ_pf[1] ~ dunif(0.5, 0.7) # PCQ precipitation fraction
   PCQ_pf.eps[1] = 0
-
-  ## Secondary soil ----
-  tsc[1] ~ dbeta(0.25 * 1000 / 0.75, 1000) # seasonal offset of PCQ for thermal diffusion
-  tsc.eps[1] = 0
-  ha[1] ~ dunif(0.2, 0.5)
+  ha[1] ~ dbeta(h_m[1] * 1e3 / (1 - hm[1]), 1e3)
   ha.eps[1] = 0
-  f_R[1] ~ dbeta(0.15 * 500 / 0.85, 500) # ratio of PCQ to mean annual respiration rate
+  
+  ## Secondary soil ----
+  tsc[1] ~ dbeta(0.29 * 1e4 / 0.71, 1e4) # seasonal offset of PCQ for thermal diffusion
+  tsc.eps[1] = 0
+  f_R[1] ~ dbeta(0.11 * 1e4 / 0.89, 1e4) # ratio of PCQ to mean annual respiration rate
   f_R.eps[1] = 0
-  d13Ca[1] ~ dnorm(-9, 1 / 1 ^ 2) # Atmospheric d13C, ppt
+  d13Ca[1] ~ dnorm(-6.5, 1 / 1 ^ 2) # Atmospheric d13C, ppt
   d13Ca.eps[1] = 0
-  ETR[1] ~ dbeta(0.06 * 1000 / 0.94, 1000) # Soil evaporation / AET
+  ETR[1] ~ dbeta(0.06 * 1e3 / 0.94, 1e3) # Soil evaporation / AET
   ETR.eps[1] = 0
   
   # Not time dependent ----
