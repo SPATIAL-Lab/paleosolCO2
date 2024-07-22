@@ -33,7 +33,7 @@ d = list(ai = ages$ts,
          d13Ca.obs = d13Ca[, 2:3], d13Ca.ai = tsi[[4]]
          )
 
-parms = c("pCO2", "MAT", "MAP", "TmPCQ", "PPCQ", "Tsoil", "d18.p", 
+parms = c("pCO2", "MAT", "Tsoil", "MAP", "PCQ_pf", "d18.p", 
           "z_m", "d18O.s", "AET_PCQ", "S_z", "d13Co", "f_R", 
           "d13Cc", "d18Oc", "d13Ca", "ha", "ETR")
 
@@ -42,7 +42,7 @@ post.clp1 = jags.parallel(d, NULL, parms, "code/models/multi_sample.R",
 
 sum1 = post.clp1$BUGSoutput$summary
 save(post.clp1, file = "out/clp1e3_ms.rda")
-traceplot(post.clp1, varname = "pCO2")
+# traceplot(post.clp1, varname = "pCO2")
 
 ## plot ----
 ages1 = ages$ts
@@ -79,7 +79,7 @@ ggplot(clp.map, aes(x = age, y = median)) +
   scale_x_continuous(limits = c(0, 2.6))
 
 clp.ppcq = data.frame(cbind(ages1, 
-                            t(apply(post.clp1$BUGSoutput$sims.list$PPCQ, 2, quantile, 
+                            t(apply(post.clp1$BUGSoutput$sims.list$PCQ_pf, 2, quantile, 
                                     c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(clp.ppcq) = c("age", "x5", "x25", "median", "x75", "x95")
 ggplot(clp.ppcq, aes(x = age, y = median)) +
@@ -101,7 +101,8 @@ clp.sz = data.frame(ages1,
 names(clp.sz) = c("age", "x5", "x25", "median", "x75", "x95")
 ggplot(clp.sz, aes(x = age, y = median)) +
   geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
+  scale_x_continuous(limits = c(0, 2.6)) +
+  scale_y_continuous(limits = c(0, 5000))
 
 clp.fr = data.frame(cbind(ages1,
                           t(apply(post.clp1$BUGSoutput$sims.list$f_R, 2, quantile, 
