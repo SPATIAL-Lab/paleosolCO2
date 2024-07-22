@@ -1,11 +1,11 @@
 source("code/helpers.R")
-load("bigout/post.Rda")
+load("out/clp1e3_ms.rda")
 
-View(post$BUGSoutput$summary)
+# View(post$BUGSoutput$summary)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$pCO2)
-points(ages, rep(min(post$BUGSoutput$sims.list$pCO2), 
-                 length(ages)), col = si)
+plot.jpi(ages$ts, post.clp1$BUGSoutput$sims.list$pCO2)
+points(ages$ts, rep(min(post.clp1$BUGSoutput$sims.list$pCO2), 
+                 length(ages$ts)), col = si)
 
 plot.jpi(ages, log(post$BUGSoutput$sims.list$S_z))
 points(ages, rep(0, length(ages)), col = si)
