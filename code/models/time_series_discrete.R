@@ -34,7 +34,6 @@ model{
     Tsoil.K[i] = Tsoil[i] + 273.15
     
     ## Potential Evapotranspiration - Hargreaves and Samani (1982) and Turc (1961)
-    Tair_PCQ[i] = MAT[i] + PCQ_to[i]
     PET_PCQ_D.1[i] = ifelse(ha[i] < 0.5, 
                             0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha[i]) / 0.7)),
                             0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50))
@@ -51,7 +50,7 @@ model{
     FAP[i] = max(FAP.1[i], 0.01)
     
     ### Soil respiration rate 
-    R_PCQ_D_m1[i] = 1.25 * exp(0.05452 * TmPCQ[i]) * PPCQ[i] / (127.77 + PPCQ[i])
+    R_PCQ_D_m1[i] = 1.25 * exp(0.05452 * Tair_PCQ[i]) * PPCQ[i] / (127.77 + PPCQ[i])
     R_PCQ_D_m[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
     R_beta[i] = R_PCQ_D_m[i] / (R_PCQ_D_m[i] * 0.5) ^ 2
     R_alpha[i] = R_PCQ_D_m[i] * R_beta[i]
@@ -133,9 +132,9 @@ model{
 
     ## Derived values ----
     d18.p[i] ~ dnorm(-15 + 0.58 * (MAT[i] * (1 - PCQ_pf[i]) +
-                               TmPCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
+                               Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
     PPCQ[i] = MAP[i] * PCQ_pf[i] 
-    TmPCQ[i] = MAT[i] + PCQ_to[i] 
+    Tair_PCQ[i] = MAT[i] + PCQ_to[i] 
 
     ## Primary environmental ----
     pCO2[i] = max(min(pCO2.p[i], 3000), 100)
@@ -219,9 +218,9 @@ model{
   # Time dependent variables, initial conditions ----
   ## Derived values ----
   d18.p[1] = -17 + 0.58 * (MAT[1] * (1 - PCQ_pf[1]) +
-                             TmPCQ[1] * PCQ_pf[1]) + MAP[1] / 250 # Precipitation d18O, ppt
+                             Tair_PCQ[1] * PCQ_pf[1]) + MAP[1] / 250 # Precipitation d18O, ppt
   PPCQ[1] = MAP[1] * PCQ_pf[1] 
-  TmPCQ[1] = MAT[1] + PCQ_to[1] 
+  Tair_PCQ[1] = MAT[1] + PCQ_to[1] 
 
   ## Primary environmental ----
   pCO2[1] ~ dunif(600, 1200) # atmospheric CO2 mixing ratio
