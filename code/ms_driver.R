@@ -41,7 +41,8 @@ post.clp1 = jags.parallel(d, NULL, parms, "code/models/multi_sample.R",
                          n.iter = 1e3, n.chains = 3)
 
 sum1 = post.clp1$BUGSoutput$summary
-save(post.clp, file = "out/clp1e3_ms.rda")
+save(post.clp1, file = "out/clp1e3_ms.rda")
+traceplot(post.clp1, varname = "pCO2")
 
 ## plot ----
 ages1 = ages$ts

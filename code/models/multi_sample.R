@@ -38,10 +38,10 @@ model{
     Tsoil.K[i] = Tsoil[i] + 273.15
     
     ## Potential Evapotranspiration - Hargreaves and Samani (1982) and Turc (1961)
-    TmPCQ[i] = MAT[i] + PCQ_to[i]
+    Tair_PCQ[i] = MAT[i] + PCQ_to[i]
     PET_PCQ_D.1[i] = ifelse(ha[i] < 0.5, 
-                       0.013 * (TmPCQ[i] / (TmPCQ[i] + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha[i]) / 0.7)),
-                       0.013 * (TmPCQ[i] / (TmPCQ[i] + 15)) * (23.885 * Rs + 50))
+                       0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha[i]) / 0.7)),
+                       0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50))
     PET_PCQ_D[i] = max(PET_PCQ_D.1[i], 0.01)
     PET_PCQ[i] = PET_PCQ_D[i] * 90
     
@@ -55,7 +55,7 @@ model{
     FAP[i] = max(FAP.1[i], 0.01)
     
     ### Soil respiration rate 
-    R_PCQ_D_m1[i] = 1.25 * exp(0.05452 * TmPCQ[i]) * PPCQ[i] / (127.77 + PPCQ[i])
+    R_PCQ_D_m1[i] = 1.25 * exp(0.05452 * Tair_PCQ[i]) * PPCQ[i] / (127.77 + PPCQ[i])
     R_PCQ_D[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
     
     ### Convert to molC/cm3/s
@@ -137,8 +137,8 @@ model{
     PCQ_to[i] ~ dunif(10, 18)
     MAP[i] ~ dunif(250, 750) # mean annual terrestrial site precipitation, mm
     PCQ_pf[i] ~ dnorm(0.7, 1 / 0.1 ^ 2)T(0.5, 0.9) # PCQ precipitation fraction
-    TmOOS[i] = (4 * MAT[i] - TmPCQ[i]) / 3
-    d18.p[i] ~ dnorm(-15 + 0.58 * (TmPCQ[i] * PCQ_pf[i] + TmOOS[i] * (1 - PCQ_pf[i])), 1 / 1 ^ 2)
+    Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
+    d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_PCQ[i] * PCQ_pf[i] + Tair_OOS[i] * (1 - PCQ_pf[i])), 1 / 1 ^ 2)
     
     ## Secondary soil ----
     tsc[i] ~ dbeta(0.29 * 1000 / 0.71, 1000) # seasonal offset of PCQ for thermal diffusion
