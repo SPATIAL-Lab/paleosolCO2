@@ -3,7 +3,8 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read data
-clp = read.csv("data/data.csv") %>% filter(site == "Fuxian") %>% filter(age < 2.6)
+clp = read.csv("data/data.csv") %>% filter(age < 2.6)
+# clp = read.csv("data/data.csv") %>% filter(site == "Zhaojiachuan") %>% filter(age < 2.6)
 md = read.csv("data/d13Ca_tipple.csv") %>% filter(age < 2.6)
 
 ## Propagate measurement, within outcrop, and within age bin uncertainties
@@ -24,7 +25,7 @@ D47c = na.exclude(clp[c("age", "D47", "D47.sd")])
 d13Ca = na.exclude(md[c("age", "d13C", "d13Ca.stdev")])
 
 dt = 0.02
-ages = seq(-3, 0, by = dt)
+ages = seq(-3, 0.1, by = dt)
 d18Oc.ai = get.ind(d18Oc$age, ages)
 d13Cc.ai = get.ind(d13Cc$age, ages)
 d13Co.ai = get.ind(d13Co$age, ages)
@@ -38,13 +39,13 @@ d = list(ai = ages, dt = dt,
          D47c.obs = D47c[, 2:3], D47c.ai = D47c.ai,
          d13Ca.obs = d13Ca[, 2:3], d13Ca.ai = d13Ca.ai)
 
-parms = c("pCO2", "MAT", "MAP", "Tair_PCQ", "Tsoil", "PPCQ", "d18.p", 
+parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18.p", 
           "d18O.s", "AET_PCQ", "z_m", "f_R", "S_z", "d13Cr", 
           "d13Cc", "d18Oc", "D47c", "d13Ca", "ha")
 
-system.time({post.tsd = jags.parallel(d, NULL, parms, "code/models/time_series_discrete.R", 
+system.time({post.clp = jags.parallel(d, NULL, parms, "code/models/time_series_discrete.R", 
                         n.iter = 1e3, n.chains = 3)})
 
 sum_clp = post.clp$BUGSoutput$summary
-# save(post.clp, file = "out/clp1e4_20_fuxian.rda")
+# save(post.clp, file = "out/clp1e3_ts.rda")
 # traceplot(post.clp, varname = "pCO2")
