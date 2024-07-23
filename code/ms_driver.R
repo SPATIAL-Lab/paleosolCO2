@@ -33,15 +33,15 @@ d = list(ai = ages$ts,
          d13Ca.obs = d13Ca[, 2:3], d13Ca.ai = tsi[[4]]
          )
 
-parms = c("pCO2", "MAT", "Tsoil", "MAP", "PCQ_pf", "d18.p", 
-          "z_m", "d18O.s", "AET_PCQ", "S_z", "d13Co", "f_R", 
-          "d13Cc", "d18Oc", "d13Ca", "ha", "ETR")
+parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18.p", 
+          "d18O.s", "AET_PCQ", "z_m", "f_R", "S_z", "d13Cr", 
+          "d13Cc", "d18Oc", "D47c", "d13Ca", "ha")
 
 post.clp1 = jags.parallel(d, NULL, parms, "code/models/multi_sample.R",
-                         n.iter = 1e3, n.chains = 3)
+                         n.iter = 1e4, n.chains = 3)
 
 sum1 = post.clp1$BUGSoutput$summary
-save(post.clp1, file = "out/clp1e3_ms.rda")
+save(post.clp1, file = "out/clp1e4_ms.rda")
 # traceplot(post.clp1, varname = "pCO2")
 
 ## plot ----

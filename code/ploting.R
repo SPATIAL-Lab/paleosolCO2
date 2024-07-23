@@ -3,32 +3,131 @@ load("out/clp1e3_ms.rda")
 
 # View(post$BUGSoutput$summary)
 
-plot.jpi(ages$ts, post.clp1$BUGSoutput$sims.list$pCO2)
-points(ages$ts, rep(min(post.clp1$BUGSoutput$sims.list$pCO2), 
-                 length(ages$ts)), col = si)
+## plot ----
+load("out/clp1e3_ts.rda")
+
+# for output without age model
+# post.clp = post.clp1
+# ages = ages$ts
+
+clp.co2 = data.frame(cbind(ages, 
+                           t(apply(post.clp$BUGSoutput$sims.list$pCO2, 2, quantile, 
+                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.co2) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.co2, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.mat = data.frame(cbind(ages, 
+                           t(apply(post.clp$BUGSoutput$sims.list$MAT, 2, quantile, 
+                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.mat) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.mat, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.st = data.frame(cbind(ages, 
+                          t(apply(post.clp$BUGSoutput$sims.list$Tsoil, 2, quantile, 
+                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.st) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.st, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.map = data.frame(cbind(ages, 
+                           t(apply(post.clp$BUGSoutput$sims.list$MAP, 2, quantile, 
+                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.map) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.map, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.pcqpf = data.frame(cbind(ages2, 
+                            t(apply(post.clp$BUGSoutput$sims.list$PCQ_pf, 2, quantile, 
+                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.ppcq) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.ppcq, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.d18p = data.frame(cbind(ages, 
+                            t(apply(post.clp$BUGSoutput$sims.list$d18.p, 2, quantile, 
+                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.d18p) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.d18p, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.sz = data.frame(cbind(ages, 
+                          t(apply(post.clp$BUGSoutput$sims.list$S_z, 2, quantile, 
+                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.sz) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.sz, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.fr = data.frame(cbind(ages, 
+                          t(apply(post.clp$BUGSoutput$sims.list$f_R, 2, quantile, 
+                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.fr) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.fr, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.d13Cc = data.frame(cbind(ages,
+                             t(apply(post.clp1$BUGSoutput$sims.list$d13Cc, 2, quantile, 
+                                     c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.d13Cc) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.d13Cc, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+clp.ha = data.frame(cbind(ages,
+                             t(apply(post.clp1$BUGSoutput$sims.list$ha, 2, quantile, 
+                                     c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(clp.ha) = c("age", "x5", "x25", "median", "x75", "x95")
+ggplot(clp.ha, aes(x = age, y = median)) +
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
+  geom_path()
+
+## plot.jpg ---- 
+
+post = post.clp
+plot.jpi(ages, post$BUGSoutput$sims.list$pCO2, ylim = c(0, 500))
+# points(ages, rep(min(post$BUGSoutput$sims.list$pCO2), 
+#                  length(ages)))
 
 plot.jpi(ages, log(post$BUGSoutput$sims.list$S_z))
-points(ages, rep(0, length(ages)), col = si)
+# points(ages, rep(0, length(ages)))
+plot.jpi(ages, post$BUGSoutput$sims.list$f_R)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$DIFC)
+# plot.jpi(ages, post$BUGSoutput$sims.list$DIFC)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$d13Cr, ylim = c(-35, 0))
-points(d13Cc$age, d13Cc$d13Cc, col = d13Cc$si)
+plot.jpi(ages, post$BUGSoutput$sims.list$d18.p)
+# points(d13Cc$age, d13Cc$d13Cc)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$GMT)
+# plot.jpi(ages, post$BUGSoutput$sims.list$GMT)
 
 plot.jpi(ages, post$BUGSoutput$sims.list$d13Ca)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$MAT[, 1,])
+plot.jpi(ages, post$BUGSoutput$sims.list$MAT)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$MAP[, 1,])
+plot.jpi(ages, post$BUGSoutput$sims.list$tsc)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$ha[, 1,])
+plot.jpi(ages, post$BUGSoutput$sims.list$PCQ_to)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$Tsoil, n = 500)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$MAP)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$PCQ_pf)
+
+plot.jpi(ages, post$BUGSoutput$sims.list$ha)
 
 plot.jpi(ages, post$BUGSoutput$sims.list$z_m)
 
-plot(post$BUGSoutput$sims.list$ha[, 1,], post$BUGSoutput$sims.list$PPCQ[, 1,])
-plot(post$BUGSoutput$sims.list$ha[, 1,], post$BUGSoutput$sims.list$MAP[, 1,])
+plot(post$BUGSoutput$sims.list$ha, post$BUGSoutput$sims.list$PPCQ)
+plot(post$BUGSoutput$sims.list$ha, post$BUGSoutput$sims.list$MAP)
 
 
 

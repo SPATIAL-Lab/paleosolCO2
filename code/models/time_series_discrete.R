@@ -131,13 +131,13 @@ model{
   for(i in 2:length(ai)){
 
     ## Derived values ----
-    d18.p[i] ~ dnorm(-15 + 0.58 * (MAT[i] * (1 - PCQ_pf[i]) +
-                               Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
-    PPCQ[i] = MAP[i] * PCQ_pf[i] 
     Tair_PCQ[i] = MAT[i] + PCQ_to[i] 
+    Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
+    d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_OOS[i] * (1 - PCQ_pf[i]) + Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
+    PPCQ[i] = MAP[i] * PCQ_pf[i] 
 
     ## Primary environmental ----
-    pCO2[i] = max(min(pCO2.p[i], 3000), 100)
+    pCO2[i] = max(min(pCO2.p[i], 400), 150)
     pCO2.p[i] = pCO2[i - 1] + pCO2.eps[i]
     pCO2.eps[i] ~ dnorm(pCO2.eps[i - 1] * (pCO2.phi ^ dt), pCO2.pc[i])
     pCO2.pc[i] = pCO2.tau * ((1 - pCO2.phi ^ 2) / (1 - pCO2.phi ^ (2 * dt)))
@@ -154,7 +154,7 @@ model{
     MAP.eps[i] ~ dnorm(MAP.eps[i - 1] * (MAP.phi ^ dt), MAP.pc[i])T(-1,)
     MAP.pc[i] = MAP.tau * ((1 - MAP.phi ^ 2) / (1 - MAP.phi ^ (2 * dt)))
     
-    PCQ_pf[i] = max(min(PCQ_pf.p[i], 0.25), 0.01)
+    PCQ_pf[i] = max(min(PCQ_pf.p[i], 0.8), 0.4)
     PCQ_pf.p[i] = PCQ_pf[i - 1] + PCQ_pf.eps[i]
     PCQ_pf.eps[i] ~ dnorm(PCQ_pf.eps[i - 1] * (PCQ_pf.phi ^ dt), PCQ_pf.pc[i])
     PCQ_pf.pc[i] = PCQ_pf.tau * ((1 - PCQ_pf.phi ^ 2) / (1 - PCQ_pf.phi ^ (2 * dt)))
@@ -164,7 +164,7 @@ model{
     tsc.eps[i] ~ dnorm(tsc.eps[i - 1] * (tsc.phi ^ dt), tsc.pc[i])
     tsc.pc[i] = tsc.tau * ((1 - tsc.phi ^ 2) / (1 - tsc.phi ^ (2 * dt)))
     
-    ha[i] = max(min(ha.p[i], 0.6), 0.1)
+    ha[i] = max(min(ha.p[i], 0.6), 0.3)
     ha.p[i] = ha[i - 1] + ha.eps[i]
     ha.eps[i] ~ dnorm(ha.eps[i - 1] * (ha.phi ^ dt), ha.pc[i])
     ha.pc[i] = ha.tau * ((1 - ha.phi ^ 2) / (1 - ha.phi ^ (2 * dt)))
@@ -185,19 +185,19 @@ model{
   }
 
   # Time dependent variables, ts parameters ----
-  pCO2.tau ~ dgamma(5, 5e5)
+  pCO2.tau ~ dgamma(10, 100)
   pCO2.phi ~ dbeta(2, 5)
   
-  MAT.tau ~ dgamma(10, 5)
+  MAT.tau ~ dgamma(10, 1e-2)
   MAT.phi ~ dbeta(2, 5)
   
-  PCQ_to.tau ~ dgamma(10, 1)
+  PCQ_to.tau ~ dgamma(10, 1e-3)
   PCQ_to.phi ~ dbeta(2, 5)
   
-  MAP.tau ~ dgamma(10, 2e-3)
+  MAP.tau ~ dgamma(10, 2e-5)
   MAP.phi ~ dbeta(2, 5)
   
-  PCQ_pf.tau ~ dgamma(10, 1e-3)
+  PCQ_pf.tau ~ dgamma(10, 1e-6)
   PCQ_pf.phi ~ dbeta(2, 5)
   
   tsc.tau ~ dgamma(10, 1e-5)
@@ -206,7 +206,7 @@ model{
   ha.tau ~ dgamma(10, 1e-2)
   ha.phi ~ dbeta(2, 5)
   
-  f_R.tau ~ dgamma(10, 1e-5)
+  f_R.tau ~ dgamma(10, 1e-6)
   f_R.phi ~ dbeta(2, 5)
   
   d13Ca.tau ~ dgamma(10, 1e-1)
@@ -217,24 +217,25 @@ model{
 
   # Time dependent variables, initial conditions ----
   ## Derived values ----
-  d18.p[1] = -17 + 0.58 * (MAT[1] * (1 - PCQ_pf[1]) +
-                             Tair_PCQ[1] * PCQ_pf[1]) + MAP[1] / 250 # Precipitation d18O, ppt
+  Tair_OOS[1] = (4 * MAT[1] - Tair_PCQ[1]) / 3
+  d18.p_m[1] = -15 + 0.58 * (Tair_PCQ[1] * PCQ_pf[1] + Tair_OOS[1] * (1 - PCQ_pf[1])) # Precipitation d18O, ppt
   PPCQ[1] = MAP[1] * PCQ_pf[1] 
-  h_m[1] = 0.25 + 0.7 * (PPCQ[1] / 900)
+  h_m[1] = min(0.95, 0.25 + 0.7 * (PPCQ[1] / 900))
   Tair_PCQ[1] = MAT[1] + PCQ_to[1]
 
   ## Primary environmental ----
   pCO2[1] ~ dunif(150, 400) # atmospheric CO2 mixing ratio
   pCO2.eps[1] = 0
-  MAT[1] ~ dunif(0, 15) # terrestrial temperature, C
+  d18.p[1] ~ dnorm(d18.p_m[1], 1/1^2)
+  MAT[1] ~ dunif(0, 20) # terrestrial temperature, C
   MAT.eps[1] = 0
-  PCQ_to[1] ~ dunif(10, 15) # PCQ temperature offset, C
+  PCQ_to[1] ~ dunif(0, 15) # PCQ temperature offset, C
   PCQ_to.eps[1] = 0
   MAP[1] ~ dunif(250, 750) # mean annual terrestrial site precipitation, mm
   MAP.eps[1] = 0
-  PCQ_pf[1] ~ dunif(0.5, 0.7) # PCQ precipitation fraction
+  PCQ_pf[1] ~ dnorm(0.6, 1/0.5^2)T(0.5, 0.7) # PCQ precipitation fraction
   PCQ_pf.eps[1] = 0
-  ha[1] ~ dbeta(h_m[1] * 1e3 / (1 - hm[1]), 1e3)
+  ha[1] ~ dbeta(h_m[1] * 1e3 / (1 - h_m[1]), 1e3)
   ha.eps[1] = 0
   
   ## Secondary soil ----
@@ -253,7 +254,7 @@ model{
   Rs = Ra * 0.16 * sqrt(12) # daily temperature range assumed to be 12
   L ~ dgamma(50, 1) # mean rooting depth, cm
   k = L / 2 / log(2)   # Respiration characteristic production depth (cm) - Quade (2007)
-  pore ~ dbeta(0.35 * 100 / 0.65, 100)T(0.06,) # soil porosity
+  pore ~ dbeta(0.45 * 100 / 0.55, 100)T(0.06,) # soil porosity
   tort ~ dbeta(0.7 * 100 / 0.3, 100) # soil tortuosity
   Dv.soil = Dv.air * tort * (pore - 0.05) # effective diffusivity of water vapor in soil (m2/s)
   
