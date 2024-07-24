@@ -49,7 +49,7 @@ fx.map = data.frame(cbind("fuxian", fx.age,
                           t(apply(fuxian$BUGSoutput$sims.list$MAP, 2, quantile, 
                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(fx.map) = c("site", "age", "x5", "x25", "median", "x75", "x95")
-zjc.map = data.frame(cbind("zhaojiachuan", fx.age, 
+zjc.map = data.frame(cbind("zhaojiachuan", zjc.age, 
                           t(apply(zhaojiachuan$BUGSoutput$sims.list$MAP, 2, quantile, 
                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(zjc.map) = c("site", "age", "x5", "x25", "median", "x75", "x95")
@@ -73,7 +73,7 @@ fx.mat = data.frame(cbind("fuxian", fx.age,
                           t(apply(fuxian$BUGSoutput$sims.list$MAT, 2, quantile, 
                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(fx.mat) = c("site", "age", "x5", "x25", "median", "x75", "x95")
-zjc.mat = data.frame(cbind("zhaojiachuan", fx.age, 
+zjc.mat = data.frame(cbind("zhaojiachuan", zjc.age, 
                            t(apply(zhaojiachuan$BUGSoutput$sims.list$MAT, 2, quantile, 
                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(zjc.mat) = c("site", "age", "x5", "x25", "median", "x75", "x95")
@@ -97,7 +97,7 @@ fx.sz = data.frame(cbind("fuxian", fx.age,
                           t(apply(fuxian$BUGSoutput$sims.list$S_z, 2, quantile, 
                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(fx.sz) = c("site", "age", "x5", "x25", "median", "x75", "x95")
-zjc.sz = data.frame(cbind("zhaojiachuan", fx.age, 
+zjc.sz = data.frame(cbind("zhaojiachuan", zjc.age, 
                            t(apply(zhaojiachuan$BUGSoutput$sims.list$S_z, 2, quantile, 
                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(zjc.sz) = c("site", "age", "x5", "x25", "median", "x75", "x95")
