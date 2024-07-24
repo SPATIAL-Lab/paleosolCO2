@@ -6,15 +6,15 @@ model{
     d13Cc.pre[i] = 1 / d13Cc.obs[i, 2] ^ 2
   }
   
-  # for(i in 1:length(d18Oc.ai)){
-  #   d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], d18Oc.pre[i])
-  #   d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
-  # }
-
-  for(i in 1:length(d13Co.ai)){
-    d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
-    d13Co.pre[i] = 1 / d13Co.obs[i, 2] ^ 2
+  for(i in 1:length(d18Oc.ai)){
+    d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], d18Oc.pre[i])
+    d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
   }
+
+  # for(i in 1:length(d13Co.ai)){
+  #   d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
+  #   d13Co.pre[i] = 1 / d13Co.obs[i, 2] ^ 2
+  # }
     
   for (i in 1:length(d13Ca.ai)) {
     d13Ca.obs[i, 1] ~ dnorm(d13Ca[d13Ca.ai[i]], d13Ca.pre[i])
