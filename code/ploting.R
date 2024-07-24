@@ -1,22 +1,21 @@
 source("code/helpers.R")
-load("out/clp1e3_ms.rda")
+load("out/clp1e4_ms.rda")
 
 # View(post$BUGSoutput$summary)
 
-## plot ----
-load("out/clp1e3_ts.rda")
-
+## plot.ms ----
 # for output without age model
-# post.clp = post.clp1
-# ages = ages$ts
+post.clp = post.clp1
+ages = ages$ts
 
 clp.co2 = data.frame(cbind(ages, 
                            t(apply(post.clp$BUGSoutput$sims.list$pCO2, 2, quantile, 
                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(clp.co2) = c("age", "x5", "x25", "median", "x75", "x95")
 ggplot(clp.co2, aes(x = age, y = median)) +
-  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "grey") +
-  geom_path()
+  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "ivory") +
+  geom_ribbon(aes(ymin = x25, ymax = x75), fill = "ivory2") +
+  geom_path(linewidth = 1)
 
 clp.mat = data.frame(cbind(ages, 
                            t(apply(post.clp$BUGSoutput$sims.list$MAT, 2, quantile, 
@@ -97,7 +96,8 @@ plot.jpi(ages, post$BUGSoutput$sims.list$pCO2, ylim = c(0, 500))
 # points(ages, rep(min(post$BUGSoutput$sims.list$pCO2), 
 #                  length(ages)))
 
-plot.jpi(ages, log(post$BUGSoutput$sims.list$S_z))
+plot.jpi(ages, post$BUGSoutput$sims.list$S_z)
+plot.jpi(ages, log10(post$BUGSoutput$sims.list$S_z))
 # points(ages, rep(0, length(ages)))
 plot.jpi(ages, post$BUGSoutput$sims.list$f_R)
 
@@ -177,39 +177,38 @@ d18Oc = na.exclude(td[c("Age", "d18O", "d18O.stdev")])
 D47c = na.exclude(td[c("Age", "D47", "D47.stderr")])
 
 ## Ages ----
-dt = 0.25
-ages = seq(-72, -52, by = dt)
+dt = 0.02
+ages = seq(-3, 0.1, by = dt)
 
 #load("bigout/tsf4e3.rda")
-load("bigout/tsd1e5_250.rda")
-load("bigout/tsmd1e5_250.rda")
+load("out/clp1e4_ms.rda")
 
-tsd.co2 = cbind(ages + dt / 2, 
-                t(apply(post.tsd$BUGSoutput$sims.list$pCO2, 2, quantile, 
+clp.co2 = cbind(ages + dt / 2, 
+                t(apply(post.clp$BUGSoutput$sims.list$pCO2, 2, quantile, 
                 c(0.05, 0.25, 0.5, 0.75, 0.95))))
-tsd.MAT = cbind(ages + dt / 2, 
-                t(apply(post.tsd$BUGSoutput$sims.list$MAT, 2, quantile, 
+clp.MAT = cbind(ages + dt / 2, 
+                t(apply(post.clp$BUGSoutput$sims.list$MAT, 2, quantile, 
                         c(0.05, 0.25, 0.5, 0.75, 0.95))))
 
 #png("out/Curves.png", 7, 6, units = "in", res = 300)
 par(mar = c(4, 4, 1, 4))
-plot(0, 0, xlim = c(-70, -52), ylim = c(0, 2), axes = FALSE,
+plot(0, 0, xlim = c(-3, 0), ylim = c(0, 2), axes = FALSE,
      xlab = "", ylab = "")
-yext = range(tsd.co2[, 2:6])
+yext = range(clp.co2[, 2:6])
 tix = seq(floor(min(yext) / 100), 
-          ceiling(max(yext) / 100), by = 5) * 100
-tsd.co2rs = cbind(tsd.co2[, 1], 
-                  1 + (tsd.co2[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsd.co2rs, "red")
+          ceiling(max(yext) / 100), by = 1) * 100
+clp.co2rs = cbind(clp.co2[, 1], 
+                  1 + (clp.co2[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.co2rs, "red")
 axis(2, 1 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression("pCO"[2]*" (ppmv)"), 2, line = 2.5, at = 1.3)
+mtext(expression("pCO"[2]*" (ppmv)"), 2, line = 2.5, at = 1.5)
 
-yext = range(tsd.MAT[, 2:6])
+yext = range(clp.MAT[, 2:6])
 tix = seq(floor(min(yext)), 
-          ceiling(max(yext)), by = 5)
-tsd.MATrs = cbind(tsd.MAT[, 1], 
-                  (tsd.MAT[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsd.MATrs, "blue")
+          ceiling(max(yext)), by = 2)
+clp.MATrs = cbind(clp.MAT[, 1], 
+                  (clp.MAT[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.MATrs, "blue")
 axis(4, (tix - min(tix)) / diff(range(tix)), tix)
 mtext(expression("MAT"), 4, line = 2.5, at = 0.5)
 
@@ -219,62 +218,82 @@ mtext("Age (Ma)", 1, line = 2)
 
 dev.off()
 
-# TSMD environmental ----
-tsmd.MAT = cbind(-(ages) - dt / 2, 
-               t(apply(post.tsmd$BUGSoutput$sims.list$MAT, 2, quantile, 
+# clp environmental ----
+clp.co2 = cbind(-(ages) - dt / 2, 
+                t(apply(post.clp$BUGSoutput$sims.list$pCO2, 2, quantile, 
+                        c(0.05, 0.25, 0.5, 0.75, 0.95))))
+clp.MAT = cbind(-(ages) - dt / 2, 
+               t(apply(post.clp$BUGSoutput$sims.list$MAT, 2, quantile, 
                        c(0.05, 0.25, 0.5, 0.75, 0.95))))
-tsmd.MAP = cbind(-(ages) - dt / 2, 
-               t(apply(post.tsmd$BUGSoutput$sims.list$MAP, 2, quantile, 
+clp.st = cbind(-(ages) - dt / 2, 
+                t(apply(post.clp$BUGSoutput$sims.list$Tsoil, 2, quantile, 
+                        c(0.05, 0.25, 0.5, 0.75, 0.95))))
+clp.MAP = cbind(-(ages) - dt / 2, 
+               t(apply(post.clp$BUGSoutput$sims.list$MAP, 2, quantile, 
                        c(0.05, 0.25, 0.5, 0.75, 0.95))))
-tsmd.d13Ca = cbind(-(ages) - dt / 2, 
-               t(apply(post.tsmd$BUGSoutput$sims.list$d13Ca, 2, quantile, 
+clp.sz = cbind(-(ages) - dt / 2, 
+               t(apply(post.clp$BUGSoutput$sims.list$S_z, 2, quantile, 
+                       c(0.05, 0.25, 0.5, 0.75, 0.95))))
+clp.ppcq = cbind(-(ages) - dt / 2, 
+               t(apply(post.clp$BUGSoutput$sims.list$PPCQ, 2, quantile, 
                        c(0.05, 0.25, 0.5, 0.75, 0.95))))
 
-png("out/Environmental.png", 7, 6, units = "in", res = 300)
+png("out/Environmental_ms.png", width = 5, height = 10, units = "in", res = 300)
 par(mar = c(4, 4, 1, 4))
-plot(0, 0, xlim = c(65, 55), ylim = c(0, 5), axes = FALSE,
+plot(0, 0, xlim = c(3, 0), ylim = c(0, 6), axes = FALSE,
      xlab = "", ylab = "")
 
-yext = range(tsmd.co2[, 2:6])
+yext = range(clp.co2[, 2:6])
 tix = seq(floor(min(yext) / 100), 
-          ceiling(max(yext) / 100), by = 3) * 100
-tsmd.co2rs = cbind(tsmd.co2[, 1], 
-                  4 + (tsmd.co2[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsmd.co2rs, pal[1])
-axis(2, 4 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression("pCO"[2]), 2, 2.5, at = 4.5)
+          ceiling(max(yext) / 100), by = 1) * 100
+clp.co2rs = cbind(clp.co2[, 1], 
+                  5 + (clp.co2[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.co2rs, pal[1])
+axis(2, 5 + (tix - min(tix)) / diff(range(tix)), tix)
+mtext(expression("pCO"[2]), 2, 2.5, at = 5.5)
 
-yext = range(tsmd.tempC[, 2:6])
+yext = range(clp.MAT[, 2:6])
 tix = seq(floor(min(yext)), ceiling(max(yext)), by = 2)
-tsmd.tempCrs = cbind(tsmd.tempC[, 1], 
-                   3 + (tsmd.tempC[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsmd.tempCrs, pal[1])
-axis(4, 3 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext("SST", 4, 2.5, at = 3.5)
+clp.MATrs = cbind(clp.MAT[, 1], 
+                   4 + (clp.MAT[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.MATrs, pal[1])
+axis(4, 4 + (tix - min(tix)) / diff(range(tix)), tix)
+mtext("MAT", 4, 2.5, at = 4.5)
 
-yext = range(tsmd.d13Ca[, 2:6])
-tix = seq(floor(min(yext)), ceiling(max(yext)), by = 3)
-tsmd.d13Cars = cbind(tsmd.d13Ca[, 1], 
-                     2 + (tsmd.d13Ca[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsmd.d13Cars, "#9dc3e6")
-axis(2, 2 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression(delta^{13}*"C"[atm]), 2, 2.5, at = 2.5)
+yext = range(clp.st[, 2:6])
+tix = seq(floor(min(yext)), ceiling(max(yext)), by = 2)
+clp.strs = cbind(clp.st[, 1], 
+                     3 + (clp.st[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.strs, pal[1])
+axis(2, 3 + (tix - min(tix)) / diff(range(tix)), tix)
+mtext(expression("T"[soil]), 2, 2.5, at = 3.5)
 
-yext = range(tsmd.MAT[, 2:6])
-tix = seq(floor(min(yext)), ceiling(max(yext)), by = 4)
-tsmd.MATrs = cbind(tsmd.MAT[, 1], 
-                     1 + (tsmd.MAT[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsmd.MATrs, pal[2])
-axis(4, 1 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext("MAT", 4, 2.5, at = 1.5)
+yext = range(clp.MAP[, 2:6])
+tix = seq(floor(min(yext) / 100), 
+          ceiling(max(yext) / 100), by = 2) * 100
+clp.MAPrs = cbind(clp.MAP[, 1], 
+                     2 + (clp.MAP[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.MAPrs, pal[1])
+axis(4, 2 + (tix - min(tix)) / diff(range(tix)), tix)
+mtext("MAP", 4, 2.5, at = 2.5)
 
-yext = range(tsmd.MAP[, 2:6])
-tix = seq(floor(min(yext)/100), ceiling(max(yext)/100), by = 2) * 100
-tsmd.MAPrs = cbind(tsmd.MAP[, 1], 
-                   (tsmd.MAP[, 2:6] - min(tix)) / diff(range(tix)))
-tsdens(tsmd.MAPrs, pal[2])
-axis(2, (tix - min(tix)) / diff(range(tix)), tix)
-mtext("MAP", 2, 2.5, at = 0.5)
+yext = range(clp.ppcq[, 2:6])
+tix = seq(floor(min(yext) / 100), 
+          ceiling(max(yext) / 100), by = 2) * 100
+clp.ppcqrs = cbind(clp.ppcq[, 1], 
+                  1 + (clp.ppcq[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.ppcqrs, pal[1])
+axis(2, 1 + (tix - min(tix)) / diff(range(tix)), tix)
+mtext("PPCQ", 2, 2.5, at = 1.5)
+
+yext = range(clp.sz[, 2:6])
+tix = seq(floor(min(yext) / 1e4), 
+          ceiling(max(yext) / 1e4), by = 1) * 1e4
+clp.szrs = cbind(clp.sz[, 1], 
+                   (clp.sz[, 2:6] - min(tix)) / diff(range(tix)))
+tsdens(clp.szrs, pal[1])
+axis(4, (tix - min(tix)) / diff(range(tix)), tix)
+mtext("S(z)", 4, 2.5, at = 0.5)
 
 ### X axis
 axis(1)
@@ -283,54 +302,44 @@ mtext("Age (Ma)", 1, line = 2)
 dev.off()
 
 # Parameters ----
-sens.pri = density(rgamma(1e6, 22.5, 5))
-sens.post = density(post.tsmd$BUGSoutput$sims.list$sens)
+co2.pri = density(runif(1e6, 150, 400))
+co2.post = density(post.clp$BUGSoutput$sims.list$pCO2)
 oe.pri = density(rnorm(1e6, 2e4, sqrt(2e6)) * 1e-6)
-oe.post = density(post.tsmd$BUGSoutput$sims.list$orgEff * 1e-6)
+oe.post = density(post.clp$BUGSoutput$sims.list$orgEff * 1e-6)
 
 png("out/Parms.png", 9, 5, "in", res = 300)
 layout(matrix(c(1, 2), nrow = 1))
 par(mai = c(1, 0.2, 0.2, 0.2))
-plot(sens.pri, xlim = range(sens.pri$x, sens.post$x),
-     ylim = range(sens.pri$y, sens.post$y), main = "", axes = FALSE,
-     xlab = "Site 1209 climate sensitivity", lty = 2, lwd = 2)
+plot(co2.pri, xlim = range(co2.pri$x, co2.post$x),
+     ylim = range(co2.pri$y, co2.post$y), main = "", axes = FALSE,
+     xlab = expression("CO"[2]), lty = 2, lwd = 2)
 axis(1)
 axis(2, labels = FALSE)
 box()
-lines(sens.post, lwd = 2)
+lines(co2.post, lwd = 2)
 plot(oe.pri, xlim = range(oe.pri$x, oe.post$x),
      ylim = range(oe.pri$y, oe.post$y), main = "", axes = FALSE,
-     xlab = expression(delta^{13}*"C"[atm]*" sensitivity (ppt/ppm)"), lty = 2, lwd = 2)
+     xlab = expression(delta^{13}*"C"[atm]*" co2itivity (ppt/ppm)"), lty = 2, lwd = 2)
 axis(1)
 axis(2, labels = FALSE)
 box()
 lines(oe.post, lwd = 2)
 dev.off()
 
-plot(ages, post.tsmd$BUGSoutput$mean$MAP, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$PPCQ, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$ha, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$MAT, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$TmPCQ, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$S_z, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$z_m, type = "l")
-plot(ages, post.tsmd$BUGSoutput$mean$d13Ca, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$MAP, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$PPCQ, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$ha, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$MAT, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$Tsoil, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$S_z, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$z_m, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$d13Ca, type = "l")
 
-plot(ages, post.tsmd$BUGSoutput$mean$d18Of, type = "l")
-points(d18Of$age, d18Of$d18O)
-plot(ages, post.tsmd$BUGSoutput$mean$d11BGrub, type = "l")
-points(-d11BGrub$age, d11BGrub$d11B)
-plot(ages, post.tsmd$BUGSoutput$mean$d11BTsac, type = "l")
-points(-d11BTsac$age, d11BTsac$d11B)
-plot(ages, post.tsmd$BUGSoutput$mean$mgcaf, type = "l")
-points(-mgcaf$age, mgcaf$MgCa)
-plot(ages, post.tsmd$BUGSoutput$mean$d13Cf, type = "l")
-points(-d13Cf$age, d13Cf$d13C)
-plot(ages, post.tsmd$BUGSoutput$mean$d13Cc, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$d13Cc, type = "l")
 points(-d13Cc$Age, d13Cc$d13C)
-plot(ages, post.tsmd$BUGSoutput$mean$d18Oc, type = "l")
+plot(ages, post.clp$BUGSoutput$mean$d18Oc, type = "l")
 points(-d18Oc$Age, d18Oc$d18O)
-plot(ages, post.tsmd$BUGSoutput$mean$D47c, type = "l", ylim = range(D47c$D47))
+plot(ages, post.clp$BUGSoutput$mean$D47c, type = "l", ylim = range(D47c$D47))
 points(-D47c$Age, D47c$D47)
 
 

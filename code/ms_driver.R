@@ -4,7 +4,7 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read data
-clp = read.csv("data/data.csv") %>% filter(site == "Fuxian") %>% filter(age < 2.6)
+clp = read.csv("data/data.csv") %>% filter(site == "Luochuan") %>% filter(age < 2.6)
 md = read.csv("data/d13Ca_tipple.csv") %>% filter(age < 2.6)
 clp = na.exclude(clp[c("age", "d13C", "d18O", "d13Co")])
 clp$d13Ca = approx(x = md$age, y = md$d13C, xout = clp$age)$y
@@ -41,98 +41,5 @@ post.clp1 = jags.parallel(d, NULL, parms, "code/models/multi_sample.R",
                          n.iter = 1e4, n.chains = 3)
 
 sum1 = post.clp1$BUGSoutput$summary
-save(post.clp1, file = "out/clp1e4_ms.rda")
+save(post.clp1, file = "out/clp1e4_ms_lc.rda")
 # traceplot(post.clp1, varname = "pCO2")
-
-## plot ----
-ages1 = ages$ts
-clp.co2 = data.frame(cbind(ages1, 
-                           t(apply(post.clp1$BUGSoutput$sims.list$pCO2, 2, quantile, 
-                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.co2) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.co2, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.mat = data.frame(cbind(ages1,
-                           t(apply(post.clp1$BUGSoutput$sims.list$MAT, 2, quantile, 
-                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.mat) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.mat, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.st = data.frame(ages1,
-                          t(apply(post.clp1$BUGSoutput$sims.list$Tsoil, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95))))
-names(clp.st) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.st, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.map = data.frame(ages1,
-                           t(apply(post.clp1$BUGSoutput$sims.list$MAP, 2, quantile, 
-                                   c(0.05, 0.25, 0.5, 0.75, 0.95))))
-names(clp.map) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.map, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.ppcq = data.frame(cbind(ages1, 
-                            t(apply(post.clp1$BUGSoutput$sims.list$PCQ_pf, 2, quantile, 
-                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.ppcq) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.ppcq, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-
-clp.d18p = data.frame(ages1,
-                            t(apply(post.clp1$BUGSoutput$sims.list$d18.p, 2, quantile, 
-                                    c(0.05, 0.25, 0.5, 0.75, 0.95))))
-names(clp.d18p) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.d18p, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.sz = data.frame(ages1,
-                          t(apply(post.clp1$BUGSoutput$sims.list$S_z, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95))))
-names(clp.sz) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.sz, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6)) +
-  scale_y_continuous(limits = c(0, 5000))
-
-clp.fr = data.frame(cbind(ages1,
-                          t(apply(post.clp1$BUGSoutput$sims.list$f_R, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.fr) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.fr, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.ha = data.frame(cbind(ages1,
-                          t(apply(post.clp1$BUGSoutput$sims.list$ha, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.ha) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.ha, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.d13Co = data.frame(cbind(ages1,
-                          t(apply(post.clp1$BUGSoutput$sims.list$d13Co, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.d13Co) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.d13Co, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-
-clp.d13Cc = data.frame(cbind(ages1,
-                             t(apply(post.clp1$BUGSoutput$sims.list$d13Cc, 2, quantile, 
-                                     c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(clp.d13Cc) = c("age", "x5", "x25", "median", "x75", "x95")
-ggplot(clp.d13Cc, aes(x = age, y = median)) +
-  geom_path() +
-  scale_x_continuous(limits = c(0, 2.6))
-

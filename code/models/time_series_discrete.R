@@ -9,9 +9,9 @@ model{
     d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], 1 / d18Oc.obs[i, 2] ^ 2)
   }
 
-  for(i in 1:length(D47c.ai)){
-    D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], 1 / D47c.obs[i, 2] ^ 2)
-  }
+  # for(i in 1:length(D47c.ai)){
+  #   D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], 1 / D47c.obs[i, 2] ^ 2)
+  # }
   
   for(i in 1:length(d13Ca.ai)){
     d13Ca.obs[i, 1] ~ dnorm(d13Ca[d13Ca.ai[i]], 1 / d13Ca.obs[i, 2] ^ 2)
@@ -124,7 +124,7 @@ model{
     alpha18_c_w_eq[i] = exp((1.61e4 / Tsoil.K[i] - 24.6) / 1000) # Wostbrock (2020)
     R18.c[i] = R18.s[i] * alpha18_c_w_eq[i]
     d18Oc[i] = (R18.c[i] / R18.VPDB - 1) * 1000
-    D47c[i] = 0.0417e6 / Tsoil.K[i] ^ 2 + 0.139
+    # D47c[i] = 0.0417e6 / Tsoil.K[i] ^ 2 + 0.139
   }
   
   # Time dependent variables, time series ----
