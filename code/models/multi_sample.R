@@ -6,10 +6,10 @@ model{
     d13Cc.pre[i] = 1 / d13Cc.obs[i, 2] ^ 2
   }
   
-  for(i in 1:length(d18Oc.ai)){
-    d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], d18Oc.pre[i])
-    d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
-  }
+  # for(i in 1:length(d18Oc.ai)){
+  #   d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], d18Oc.pre[i])
+  #   d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
+  # }
 
   for(i in 1:length(d13Co.ai)){
     d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
@@ -133,10 +133,10 @@ model{
     # Time dependent variables ----
     ## Primary environmental ----
     pCO2[i] ~ dunif(100, 400) # atmospheric CO2 mixing ratio
-    MAT[i] ~ dunif(0, 25)
-    PCQ_to[i] ~ dunif(10, 18)
-    MAP[i] ~ dunif(250, 750) # mean annual terrestrial site precipitation, mm
-    PCQ_pf[i] ~ dnorm(0.7, 1 / 0.1 ^ 2)T(0.5, 0.9) # PCQ precipitation fraction
+    MAT[i] ~ dunif(0, 20)
+    PCQ_to[i] ~ dunif(10, 16)
+    MAP[i] ~ dunif(150, 750) # mean annual terrestrial site precipitation, mm
+    PCQ_pf[i] ~ dnorm(0.55, 1 / 0.1 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_PCQ[i] * PCQ_pf[i] + Tair_OOS[i] * (1 - PCQ_pf[i])), 1 / 1 ^ 2)
     
