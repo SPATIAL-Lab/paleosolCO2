@@ -3,8 +3,8 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read data
-clp = read.csv("data/data.csv") %>% filter(age < 2.6)
-# clp = read.csv("data/data.csv") %>% filter(site == "Zhaojiachuan") %>% filter(age < 2.6)
+# clp = read.csv("data/data.csv") %>% filter(age < 2.6)
+clp = read.csv("data/data.csv") %>% filter(site == "Zhaojiachuan") %>% filter(age < 2.6)
 md = read.csv("data/d13Ca_tipple.csv") %>% filter(age < 2.6)
 
 ## Propagate measurement, within outcrop, and within age bin uncertainties
@@ -44,8 +44,10 @@ parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18
           "d13Cc", "d18Oc", "D47c", "d13Ca", "ha")
 
 system.time({post.clp = jags.parallel(d, NULL, parms, "code/models/time_series_discrete.R", 
-                        n.iter = 1e3, n.chains = 3)})
+                        n.iter = 1e4, n.chains = 3)})
 
 sum_clp = post.clp$BUGSoutput$summary
-# save(post.clp, file = "out/clp1e3_ts.rda")
+save(post.clp, file = "out/clp1e4_ts_zjc.rda")
 # traceplot(post.clp, varname = "pCO2")
+# traceplot(post.clp, varname = "MAT")
+# traceplot(post.clp, varname = "MAP")
