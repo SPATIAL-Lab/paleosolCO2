@@ -136,13 +136,13 @@ model{
     MAT[i] ~ dunif(0, 20)
     PCQ_to[i] ~ dunif(10, 16)
     MAP[i] ~ dunif(150, 750) # mean annual terrestrial site precipitation, mm
-    PCQ_pf[i] ~ dnorm(0.55, 1 / 0.1 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
+    PCQ_pf[i] ~ dnorm(0.55, 1 / 0.5 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_PCQ[i] * PCQ_pf[i] + Tair_OOS[i] * (1 - PCQ_pf[i])), 1 / 1 ^ 2)
     
     ## Secondary soil ----
     tsc[i] ~ dbeta(0.29 * 1000 / 0.71, 1000) # seasonal offset of PCQ for thermal diffusion
-    h_m[i] = 0.25 + 0.7 * (PPCQ[i] / 900)
+    h_m[i] = min(0.95, 0.25 + 0.7 * (PPCQ[i] / 900))
     ha[i] ~ dbeta(h_m[i] * 100 / (1 - h_m[i]), 100) # PCQ atmospheric humidity
     f_R[i] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
     d13Ca[i] ~ dunif(-8, -5) # Atmospheric d13C, ppt

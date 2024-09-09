@@ -1,6 +1,18 @@
 library(tidyverse)
 library(ggpubr)
 
+zhaojiachuan = post.clp1
+zjc.age = read.csv("data/sample_data.csv")
+zjc.age = zjc.age$age
+zjc.co2 = data.frame(cbind("zhaojiachuan", zjc.age, 
+                           t(apply(zhaojiachuan$BUGSoutput$sims.list$pCO2, 2, quantile, 
+                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
+names(zjc.co2) = c("site", "age", "x5", "x25", "median", "x75", "x95")
+zjc.co2[,2:7] = lapply(zjc.co2[,2:7], as.numeric)
+ggplot(zjc.co2, aes(x = age, y = median)) +
+  geom_point()
+
+
 # pCO2 ----
 load("out/clp1e4_ms_fx.rda")
 fuxian = post.clp1

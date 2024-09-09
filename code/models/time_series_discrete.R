@@ -2,30 +2,41 @@ model{
 
   # Data model ----
   for(i in 1:length(d13Cc.ai)){
-    d13Cc.obs[i, 1] ~ dnorm(d13Cc[d13Cc.ai[i]], 1 / d13Cc.obs[i, 2] ^ 2)
+    d13Cc.obs[i, 1] ~ dnorm(d13Cc[d13Cc.ai[i]], d13Cc.pre[i])
+    d13Cc.pre[i] = 1 / d13Cc.obs[i, 2] ^ 2
   }
-
-  for(i in 1:length(d18Oc.ai)){
-    d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], 1 / d18Oc.obs[i, 2] ^ 2)
-  }
-
-  # for(i in 1:length(D47c.ai)){
-  #   D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], 1 / D47c.obs[i, 2] ^ 2)
-  # }
   
-  for(i in 1:length(d13Ca.ai)){
-    d13Ca.obs[i, 1] ~ dnorm(d13Ca[d13Ca.ai[i]], 1 / d13Ca.obs[i, 2] ^ 2)
+  for(i in 1:length(d18Oc.ai)){
+    d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], d18Oc.pre[i])
+    d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
+  }
+  
+  for(i in 1:length(d13Co.ai)){
+    d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
+    d13Co.pre[i] = 1 / d13Co.obs[i, 2] ^ 2
+  }
+  
+  for (i in 1:length(d13Ca.ai)) {
+    d13Ca.obs[i, 1] ~ dnorm(d13Ca[d13Ca.ai[i]], d13Ca.pre[i])
+    d13Ca.pre[i] = 1 / d13Ca.obs[i, 2] ^ 2
+  }
+  
+  for(i in 1:length(D47c.ai)){
+    D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
+    D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
   }
   
   for(i in 1:length(ai)){  
+    
     # Soil carbonate ----
     ## Depth to carbonate formation based on Retallack (2005) data, meters
-    z.mean[i] = (0.093 * MAP[i] + 13.12)
-    ### Gamma rate
-    z.beta[i] = z.mean[i] / (22 ^ 2)
-    ### Gamma shape
-    z.alpha[i] = z.mean[i] * z.beta[i]
-    z[i] ~ dgamma(z.alpha[i], z.beta[i])
+    # z.mean[i] = (0.093 * MAP[i] + 13.12)
+    # ### Gamma rate
+    # z.beta[i] = z.mean[i] / (22 ^ 2)
+    # ### Gamma shape
+    # z.alpha[i] = z.mean[i] * z.beta[i]
+    # z[i] ~ dgamma(z.alpha[i], z.beta[i])
+    z[i] = (0.093 * MAP[i] + 13.12)
     z_m[i] = z[i] / 100
     
     ## Soil temperatures at depth z
@@ -41,8 +52,9 @@ model{
     PET_PCQ[i] = PET_PCQ_D[i] * 90
     
     ## AET in mm/quarter from Budyko curve - Pike (1964)
-    AET_var[i] ~ dgamma(1 / 0.2 ^ 2, 1 / 0.2 ^ 2) # noise parameter - Gentine (2012)
-    AET_PCQ[i] = PPCQ[i] * (1 / (sqrt(1 + (1 / ((PET_PCQ[i] / (PPCQ[i])) * AET_var[i])) ^ 2)))
+    # AET_var[i] ~ dgamma(1 / 0.2 ^ 2, 1 / 0.2 ^ 2) # noise parameter - Gentine (2012)
+    # AET_PCQ[i] = PPCQ[i] * (1 / (sqrt(1 + (1 / ((PET_PCQ[i] / (PPCQ[i])) * AET_var[i])) ^ 2)))
+    AET_PCQ[i] = PPCQ[i] * (1 / (sqrt(1 + (1 / ((PET_PCQ[i] / (PPCQ[i])))) ^ 2)))
     
     ## Carbon isotopes ----
     ### Free air porosity
@@ -51,10 +63,11 @@ model{
     
     ### Soil respiration rate 
     R_PCQ_D_m1[i] = 1.25 * exp(0.05452 * Tair_PCQ[i]) * PPCQ[i] / (127.77 + PPCQ[i])
-    R_PCQ_D_m[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
-    R_beta[i] = R_PCQ_D_m[i] / (R_PCQ_D_m[i] * 0.5) ^ 2
-    R_alpha[i] = R_PCQ_D_m[i] * R_beta[i]
-    R_PCQ_D[i] ~ dgamma(R_alpha[i], R_beta[i])
+    R_PCQ_D[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
+    # R_PCQ_D_m[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
+    # R_beta[i] = R_PCQ_D_m[i] / (R_PCQ_D_m[i] * 0.5) ^ 2
+    # R_alpha[i] = R_PCQ_D_m[i] * R_beta[i]
+    # R_PCQ_D[i] ~ dgamma(R_alpha[i], R_beta[i])
     
     ### Convert to molC/cm3/s
     R_PCQ_D.1[i] = R_PCQ_D[i] / (12.01 * 100 ^ 2)  # from gC/m2/d to molC/cm2/d
@@ -67,13 +80,14 @@ model{
     
     ### S(z)
     S_z_mol[i] = k ^ 2 * R_PCQ_S_0[i] / DIFC[i] * (1 - exp(-z[i] / k)) # (mol/cm3)
-    S_z[i] = S_z_mol[i] * (0.08206 * Tsoil.K[i] * 10^9) # ppmv
+    S_z[i] = S_z_mol[i] * (0.08206 * Tsoil.K[i] * 10^9) # ppmv 
     
     ### d13C of soil-respired CO2
-    DD13_water[i] = 25.09 - 1.2 * (MAP[i] + 975) / (27.2 + 0.04 * (MAP[i] + 975))
-    D13C_plant[i] = (28.26 * 0.22 * (pCO2[i] + 23.9)) / (28.26 + 0.22 * (pCO2[i] + 23.9)) - DD13_water[i] # schubert & Jahren (2015)
-    D13C_off[i] ~ dnorm(0, 1 / 2 ^ 2) # Noise term
-    d13Cr[i] = d13Ca[i] - D13C_plant[i] + D13C_off[i]
+    # DD13_water[i] = 25.09 - 1.2 * (MAP[i] + 975) / (27.2 + 0.04 * (MAP[i] + 975))
+    # D13C_plant[i] = (28.26 * 0.22 * (pCO2[i] + 23.9)) / (28.26 + 0.22 * (pCO2[i] + 23.9)) - DD13_water[i] # schubert & Jahren (2015)
+    # D13C_off[i] ~ dnorm(0, 1 / 2 ^ 2) # Noise term
+    # d13Cr[i] = d13Ca[i] - D13C_plant[i] + D13C_off[i]
+    d13Co[i] = d13Cr[i] + 1 + SOM.frac
     
     ### d13C of pedogenic carbonate
     d13Cs[i] = (pCO2[i] * d13Ca[i] + S_z[i] * (1.0044 * d13Cr[i] + 4.4))/(S_z[i] + pCO2[i])
@@ -124,7 +138,7 @@ model{
     alpha18_c_w_eq[i] = exp((1.61e4 / Tsoil.K[i] - 24.6) / 1000) # Wostbrock (2020)
     R18.c[i] = R18.s[i] * alpha18_c_w_eq[i]
     d18Oc[i] = (R18.c[i] / R18.VPDB - 1) * 1000
-    # D47c[i] = 0.0417e6 / Tsoil.K[i] ^ 2 + 0.139
+    D47c[i] = 0.0417e6 / Tsoil.K[i] ^ 2 + 0.139
   }
   
   # Time dependent variables, time series ----
@@ -137,82 +151,102 @@ model{
     PPCQ[i] = MAP[i] * PCQ_pf[i] 
 
     ## Primary environmental ----
-    pCO2[i] = max(min(pCO2.p[i], 400), 150)
-    pCO2.p[i] = pCO2[i - 1] + pCO2.eps[i]
-    pCO2.eps[i] ~ dnorm(pCO2.eps[i - 1] * (pCO2.phi ^ dt), pCO2.pc[i])
-    pCO2.pc[i] = pCO2.tau * ((1 - pCO2.phi ^ 2) / (1 - pCO2.phi ^ (2 * dt)))
-    
-    MAT[i] = MAT[i - 1] + MAT.eps[i]
-    MAT.eps[i] ~ dnorm(MAT.eps[i - 1] * (MAT.phi ^ dt), MAT.pc[i])
-    MAT.pc[i] = MAT.tau * ((1 - MAT.phi ^ 2) / (1 - MAT.phi ^ (2 * dt)))
-    
-    PCQ_to[i] = PCQ_to[i - 1] + PCQ_to.eps[i]
-    PCQ_to.eps[i] ~ dnorm(PCQ_to.eps[i - 1] * (PCQ_to.phi ^ dt), PCQ_to.pc[i])
-    PCQ_to.pc[i] = PCQ_to.tau * ((1 - PCQ_to.phi ^ 2) / (1 - PCQ_to.phi ^ (2 * dt)))
-    
-    MAP[i] = MAP[i - 1] * (1 + MAP.eps[i])
-    MAP.eps[i] ~ dnorm(MAP.eps[i - 1] * (MAP.phi ^ dt), MAP.pc[i])T(-1,)
-    MAP.pc[i] = MAP.tau * ((1 - MAP.phi ^ 2) / (1 - MAP.phi ^ (2 * dt)))
-    
-    PCQ_pf[i] = max(min(PCQ_pf.p[i], 0.8), 0.4)
-    PCQ_pf.p[i] = PCQ_pf[i - 1] + PCQ_pf.eps[i]
-    PCQ_pf.eps[i] ~ dnorm(PCQ_pf.eps[i - 1] * (PCQ_pf.phi ^ dt), PCQ_pf.pc[i])
-    PCQ_pf.pc[i] = PCQ_pf.tau * ((1 - PCQ_pf.phi ^ 2) / (1 - PCQ_pf.phi ^ (2 * dt)))
-
-    ## Secondary soil ----
-    tsc[i] = tsc[i - 1] + tsc.eps[i]
-    tsc.eps[i] ~ dnorm(tsc.eps[i - 1] * (tsc.phi ^ dt), tsc.pc[i])
-    tsc.pc[i] = tsc.tau * ((1 - tsc.phi ^ 2) / (1 - tsc.phi ^ (2 * dt)))
-    
-    ha[i] = max(min(ha.p[i], 0.6), 0.3)
-    ha.p[i] = ha[i - 1] + ha.eps[i]
-    ha.eps[i] ~ dnorm(ha.eps[i - 1] * (ha.phi ^ dt), ha.pc[i])
-    ha.pc[i] = ha.tau * ((1 - ha.phi ^ 2) / (1 - ha.phi ^ (2 * dt)))
-    
-    f_R[i] = max(min(f_R.p[i], 0.15), 0.02)
-    f_R.p[i] = f_R[i - 1] + f_R.eps[i]
-    f_R.eps[i] ~ dnorm(f_R.eps[i - 1] * (f_R.phi ^ dt), f_R.pc[i])
-    f_R.pc[i] = f_R.tau * ((1 - f_R.phi ^ 2) / (1 - f_R.phi ^ (2 * dt)))
-
+    # d13Ca[i] ~ dunif(-8, -5) # Atmospheric d13C, ppt
     d13Ca[i] = d13Ca[i - 1] + d13Ca.eps[i]
     d13Ca.eps[i] ~ dnorm(d13Ca.eps[i - 1] * (d13Ca.phi ^ dt), d13Ca.pc[i])
     d13Ca.pc[i] = d13Ca.tau * ((1 - d13Ca.phi ^ 2) / (1 - d13Ca.phi ^ (2 * dt)))
     
+    # pCO2[i] ~ dunif(100, 400) # atmospheric CO2 mixing ratio
+    pCO2[i] = max(min(pCO2.p[i], 400), 150)
+    pCO2.p[i] = pCO2[i - 1] + pCO2.eps[i]
+    pCO2.eps[i] ~ dnorm(pCO2.eps[i - 1] * (pCO2.phi ^ dt), pCO2.pc[i])
+    pCO2.pc[i] = pCO2.tau * ((1 - pCO2.phi ^ 2) / (1 - pCO2.phi ^ (2 * dt)))
+
+    # MAT[i] ~ dunif(0, 20) # terrestrial temperature, C
+    MAT[i] = max(MAT.p[i], 0)
+    MAT.p[i] = MAT[i - 1] + MAT.eps[i]
+    MAT.eps[i] ~ dnorm(MAT.eps[i - 1] * (MAT.phi ^ dt), MAT.pc[i])
+    MAT.pc[i] = MAT.tau * ((1 - MAT.phi ^ 2) / (1 - MAT.phi ^ (2 * dt)))
+    
+    # PCQ_to[i] ~ dunif(10, 16)
+    PCQ_to[i] = PCQ_to[i - 1] + PCQ_to.eps[i]
+    PCQ_to.eps[i] ~ dnorm(PCQ_to.eps[i - 1] * (PCQ_to.phi ^ dt), PCQ_to.pc[i])
+    PCQ_to.pc[i] = PCQ_to.tau * ((1 - PCQ_to.phi ^ 2) / (1 - PCQ_to.phi ^ (2 * dt)))
+
+    # MAP[i] ~ dunif(150, 750) # mean annual precipitation, mm
+    MAP[i] = max(min(MAP.p[i], 1000), 150)
+    MAP.p[i] = MAP[i - 1] * (1 + MAP.eps[i])
+    MAP.eps[i] ~ dnorm(MAP.eps[i - 1] * (MAP.phi ^ dt), MAP.pc[i])T(-1,)
+    MAP.pc[i] = MAP.tau * ((1 - MAP.phi ^ 2) / (1 - MAP.phi ^ (2 * dt)))
+
+    PCQ_pf[i] ~ dnorm(0.6, 1 / 0.5 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
+    # PCQ_pf[i] = max(min(PCQ_pf.p[i], 0.8), 0.3)
+    # PCQ_pf.p[i] = PCQ_pf[i - 1] + PCQ_pf.eps[i]
+    # PCQ_pf.eps[i] ~ dnorm(PCQ_pf.eps[i - 1] * (PCQ_pf.phi ^ dt), PCQ_pf.pc[i])
+    # PCQ_pf.pc[i] = PCQ_pf.tau * ((1 - PCQ_pf.phi ^ 2) / (1 - PCQ_pf.phi ^ (2 * dt)))
+
+    ha[i] ~ dbeta(h_m[i] * 100 / (1 - h_m[i]), 100) # PCQ atmospheric humidity
+    h_m[i] = min(0.95, 0.25 + 0.7 * (PPCQ[i] / 900))
+    # ha[i] = max(min(ha.p[i], 0.9), 0.2)
+    # ha.p[i] = ha[i - 1] + ha.eps[i]
+    # ha.eps[i] ~ dnorm(ha.eps[i - 1] * (ha.phi ^ dt), ha.pc[i])
+    # ha.pc[i] = ha.tau * ((1 - ha.phi ^ 2) / (1 - ha.phi ^ (2 * dt)))
+    
+    ## Secondary soil ----
+    # tsc[i] ~ dbeta(0.29 * 1e3 / 0.71, 1e3) # seasonal offset of PCQ for thermal diffusion
+    tsc[i] = tsc[i - 1] + tsc.eps[i]
+    tsc.eps[i] ~ dnorm(tsc.eps[i - 1] * (tsc.phi ^ dt), tsc.pc[i])
+    tsc.pc[i] = tsc.tau * ((1 - tsc.phi ^ 2) / (1 - tsc.phi ^ (2 * dt)))
+    
+    # f_R[i] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
+    f_R[i] = f_R[i - 1] + f_R.eps[i]
+    f_R.eps[i] ~ dnorm(f_R.eps[i - 1] * (f_R.phi ^ dt), f_R.pc[i])
+    f_R.pc[i] = f_R.tau * ((1 - f_R.phi ^ 2) / (1 - f_R.phi ^ (2 * dt)))
+
+    # ETR[i] ~ dbeta(0.06 * 1e3 / 0.94, 1e3) # Soil evaporation / AET
     ETR[i] = max(min(ETR.p[i], 0.1), 0.01)
     ETR.p[i] = ETR[i - 1] + ETR.eps[i]
     ETR.eps[i] ~ dnorm(ETR.eps[i - 1] * (ETR.phi ^ dt), ETR.pc[i])
     ETR.pc[i] = ETR.tau * ((1 - ETR.phi ^ 2) / (1 - ETR.phi ^ (2 * dt)))
+    
+    # d13Cr[i] ~ dunif(-27, -22)
+    d13Cr[i] = d13Cr[i - 1] + d13Cr.eps[i]
+    d13Cr.eps[i] ~ dnorm(d13Cr.eps[i - 1] * (d13Cr.phi ^ dt), d13Cr.pc[i])
+    d13Cr.pc[i] = d13Cr.tau * ((1 - d13Cr.phi ^ 2) / (1 - d13Cr.phi ^ (2 * dt)))
   }
 
   # Time dependent variables, ts parameters ----
-  pCO2.tau ~ dgamma(10, 100)
+  pCO2.tau ~ dgamma(5, 5e2)
   pCO2.phi ~ dbeta(2, 5)
-  
-  MAT.tau ~ dgamma(10, 1e-2)
+
+  MAT.tau ~ dgamma(10, 5)
   MAT.phi ~ dbeta(2, 5)
-  
-  PCQ_to.tau ~ dgamma(10, 1e-3)
+
+  PCQ_to.tau ~ dgamma(10, 1e-1)
   PCQ_to.phi ~ dbeta(2, 5)
-  
-  MAP.tau ~ dgamma(10, 2e-5)
+
+  MAP.tau ~ dgamma(10, 5e-3) # percentage
   MAP.phi ~ dbeta(2, 5)
-  
-  PCQ_pf.tau ~ dgamma(10, 1e-6)
+
+  PCQ_pf.tau ~ dgamma(10, 1e-4)
   PCQ_pf.phi ~ dbeta(2, 5)
-  
+
   tsc.tau ~ dgamma(10, 1e-5)
   tsc.phi ~ dbeta(2, 5)
-  
-  ha.tau ~ dgamma(10, 1e-2)
-  ha.phi ~ dbeta(2, 5)
-  
-  f_R.tau ~ dgamma(10, 1e-6)
+
+  # ha.tau ~ dgamma(10, 1e-2)
+  # ha.phi ~ dbeta(2, 5)
+
+  f_R.tau ~ dgamma(10, 1e-5)
   f_R.phi ~ dbeta(2, 5)
-  
+
   d13Ca.tau ~ dgamma(10, 1e-1)
   d13Ca.phi ~ dbeta(5, 2)
-  
-  ETR.tau ~ dgamma(10, 1e-5)
+
+  d13Cr.tau ~ dgamma(10, 10)
+  d13Cr.phi ~ dbeta(5, 2)
+
+  ETR.tau ~ dgamma(10, 1e-6)
   ETR.phi ~ dbeta(2, 5)
 
   # Time dependent variables, initial conditions ----
@@ -224,39 +258,42 @@ model{
   Tair_PCQ[1] = MAT[1] + PCQ_to[1]
 
   ## Primary environmental ----
+  d13Ca[1] ~ dunif(-8, -5) # Atmospheric d13C, ppt
+  d13Ca.eps[1] = 0
   pCO2[1] ~ dunif(150, 400) # atmospheric CO2 mixing ratio
   pCO2.eps[1] = 0
   d18.p[1] ~ dnorm(d18.p_m[1], 1/1^2)
   MAT[1] ~ dunif(0, 20) # terrestrial temperature, C
   MAT.eps[1] = 0
-  PCQ_to[1] ~ dunif(0, 15) # PCQ temperature offset, C
+  PCQ_to[1] ~ dunif(10, 16) # PCQ temperature offset, C
   PCQ_to.eps[1] = 0
-  MAP[1] ~ dunif(250, 750) # mean annual terrestrial site precipitation, mm
+  MAP[1] ~ dunif(150, 650) # mean annual precipitation, mm
   MAP.eps[1] = 0
-  PCQ_pf[1] ~ dnorm(0.6, 1/0.5^2)T(0.5, 0.7) # PCQ precipitation fraction
+  PCQ_pf[1] ~ dunif(0.5, 0.6) # PCQ precipitation fraction
   PCQ_pf.eps[1] = 0
-  ha[1] ~ dbeta(h_m[1] * 1e3 / (1 - h_m[1]), 1e3)
+  ha[1] ~ dbeta(h_m[1] * 100 / (1 - h_m[1]), 100)
   ha.eps[1] = 0
   
   ## Secondary soil ----
-  tsc[1] ~ dbeta(0.29 * 1e4 / 0.71, 1e4) # seasonal offset of PCQ for thermal diffusion
+  tsc[1] ~ dbeta(0.29 * 1e3 / 0.71, 1e3) # seasonal offset of PCQ for thermal diffusion
   tsc.eps[1] = 0
-  f_R[1] ~ dbeta(0.11 * 1e4 / 0.89, 1e4) # ratio of PCQ to mean annual respiration rate
+  f_R[1] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
   f_R.eps[1] = 0
-  d13Ca[1] ~ dnorm(-6.5, 1 / 1 ^ 2) # Atmospheric d13C, ppt
-  d13Ca.eps[1] = 0
   ETR[1] ~ dbeta(0.06 * 1e3 / 0.94, 1e3) # Soil evaporation / AET
-  ETR.eps[1] = 0
+  ETR.eps[1] = 0 
+  d13Cr[1] ~ dunif(-27, -22)
+  d13Cr.eps[1] = 0
   
   # Not time dependent ----
   lat = 30 # terrestrial site latitude
   Ra = 42.608 - 0.3538 * abs(lat) # total radiation at the top of the atmosphere
   Rs = Ra * 0.16 * sqrt(12) # daily temperature range assumed to be 12
-  L ~ dgamma(50, 1) # mean rooting depth, cm
+  L ~ dgamma(40, 1) # mean rooting depth, cm
   k = L / 2 / log(2)   # Respiration characteristic production depth (cm) - Quade (2007)
   pore ~ dbeta(0.45 * 100 / 0.55, 100)T(0.06,) # soil porosity
   tort ~ dbeta(0.7 * 100 / 0.3, 100) # soil tortuosity
   Dv.soil = Dv.air * tort * (pore - 0.05) # effective diffusivity of water vapor in soil (m2/s)
+  SOM.frac ~ dunif(-0.5, 0.5)
   
   ## Constants ----
   R13.VPDB = 0.011237
