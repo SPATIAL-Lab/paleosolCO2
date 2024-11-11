@@ -10,7 +10,7 @@ model{
     d18Oc.obs[i, 1] ~ dnorm(d18Oc[d18Oc.ai[i]], d18Oc.pre[i])
     d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
   }
-  
+
   for(i in 1:length(d13Co.ai)){
     d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
     d13Co.pre[i] = 1 / d13Co.obs[i, 2] ^ 2
@@ -21,12 +21,16 @@ model{
     d13Ca.pre[i] = 1 / d13Ca.obs[i, 2] ^ 2
   }
   
-  for(i in 1:length(D47c.ai)){
-    D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
-    D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
+  for (i in 1:length(ice.ai)) {
+    ice.obs[i, 1] ~ dnorm(ice[ice.ai[i]], ice.pre[i])
+    ice.pre[i] = 1 / ice.obs[i, 2] ^ 2
   }
   
-  
+  # for(i in 1:length(D47c.ai)){
+  #   D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
+  #   D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
+  # }
+  # 
   for(i in 1:length(ai)){  
     # Soil carbonate ----
     ## Depth to carbonate formation based on Retallack (2005) data, meters
@@ -34,12 +38,12 @@ model{
     z_m[i] = z[i] / 100
     
     ## Soil temperatures at depth z
-    Tsoil[i] = MAT[i] + (PCQ_to[i] * sin(2 * 3.141593 * tsc[i] - z[i] / d)) / 
+    Tsoil[i] = MAT[i] + (PCQ_to[i] * sin(2 * 3.1415 * tsc[i] - z[i] / d)) / 
       exp(z[i] / d) 
     Tsoil.K[i] = Tsoil[i] + 273.15
     
     ## Potential Evapotranspiration - Hargreaves and Samani (1982) and Turc (1961)
-    Tair_PCQ[i] = MAT[i] + PCQ_to[i] * sin(2 * 3.141593 * tsc[i])
+    Tair_PCQ[i] = MAT[i] + PCQ_to[i]
     PET_PCQ_D.1[i] = ifelse(ha[i] < 0.5, 
                        0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha[i]) / 0.7)),
                        0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50))
@@ -71,7 +75,7 @@ model{
     ### S(z)
     S_z_mol[i] = k ^ 2 * R_PCQ_S_0[i] / DIFC[i] * (1 - exp(-z[i] / k)) # (mol/cm3)
     S_z[i] = S_z_mol[i] * (0.08206 * Tsoil.K[i] * 10^9) # ppmv
-
+    
     ### d13C of soil-respired CO2
     # DD13_water[i] = 25.09 - 1.2 * (MAP[i] + 975) / (27.2 + 0.04 * (MAP[i] + 975))
     # D13C_plant[i] = (28.26 * 0.22 * (pCO2[i] + 23.9)) / (28.26 + 0.22 * (pCO2[i] + 23.9)) - DD13_water[i] # schubert & Jahren (2015)
@@ -81,6 +85,8 @@ model{
     ### d13C of pedogenic carbonate
     d13Cs[i] = (pCO2[i] * d13Ca[i] + S_z[i] * (1.0044 * d13Cr[i] + 4.4))/(S_z[i] + pCO2[i])
     d13Cc[i] = ((1 + (11.98 - 0.12 * Tsoil[i]) / 1000) * (d13Cs[i] + 1000)) - 1000
+    ice[i] = pCO2[i]
+    Ratio[i] = pCO2[i] / S_z[i]
     
     ## Oxygen isotopes ----
     ### Rainfall isotopes
@@ -128,7 +134,6 @@ model{
     R18.c[i] = R18.s[i] * alpha18_c_w_eq[i]
     d18Oc[i] = (R18.c[i] / R18.VPDB - 1) * 1000
     D47c[i] = 0.0391e6 / Tsoil.K[i] ^ 2 + 0.154 # Andersen (2021)
-    # d18Oc.2[i] = 20.40381 * exp(-0.36828 * S_z[i])
   }
   
   for(i in 1:length(ai)){

@@ -81,7 +81,7 @@ model{
     ### S(z)
     S_z_mol[i] = k ^ 2 * R_PCQ_S_0[i] / DIFC[i] * (1 - exp(-z[i] / k)) # (mol/cm3)
     S_z[i] = S_z_mol[i] * (0.08206 * Tsoil.K[i] * 10^9) # ppmv 
-
+    
     ### d13C of soil-respired CO2
     # DD13_water[i] = 25.09 - 1.2 * (MAP[i] + 975) / (27.2 + 0.04 * (MAP[i] + 975))
     # D13C_plant[i] = (28.26 * 0.22 * (pCO2[i] + 23.9)) / (28.26 + 0.22 * (pCO2[i] + 23.9)) - DD13_water[i] # schubert & Jahren (2015)
@@ -92,7 +92,6 @@ model{
     ### d13C of pedogenic carbonate
     d13Cs[i] = (pCO2[i] * d13Ca[i] + S_z[i] * (1.0044 * d13Cr[i] + 4.4))/(S_z[i] + pCO2[i])
     d13Cc[i] = ((1 + (11.98 - 0.12 * Tsoil[i]) / 1000) * (d13Cs[i] + 1000)) - 1000
-    Ratio[i] = pCO2[i] / (S_z[i] + pCO2[i])
     
     ## Oxygen isotopes ----
     ### Rainfall isotopes
@@ -146,7 +145,7 @@ model{
   for(i in 2:length(ai)){
 
     ## Derived values ----
-    Tair_PCQ[i] = MAT[i] + PCQ_to[i]  * sin(2 * 3.141593 * tsc[i])
+    Tair_PCQ[i] = MAT[i] + PCQ_to[i] 
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_OOS[i] * (1 - PCQ_pf[i]) + Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
     PPCQ[i] = MAP[i] * PCQ_pf[i] 
@@ -218,16 +217,16 @@ model{
   }
 
   # Time dependent variables, ts parameters ----
-  pCO2.tau ~ dgamma(10, 10e3) # 10, 10e3
+  pCO2.tau ~ dgamma(5, 5e2)
   pCO2.phi ~ dbeta(2, 5)
 
-  MAT.tau ~ dgamma(10, 1) # 10, 1
+  MAT.tau ~ dgamma(10, 1)
   MAT.phi ~ dbeta(2, 5)
 
-  PCQ_to.tau ~ dgamma(10, 1) # 10, 1
+  PCQ_to.tau ~ dgamma(10, 1)
   PCQ_to.phi ~ dbeta(2, 5)
 
-  MAP.tau ~ dgamma(10, 5e-3) # percentage
+  MAP.tau ~ dgamma(10, 5e-2) # percentage
   MAP.phi ~ dbeta(2, 5)
 
   PCQ_pf.tau ~ dgamma(10, 5e-3)
@@ -255,15 +254,14 @@ model{
   ## Derived values ----
   Tair_OOS[1] = (4 * MAT[1] - Tair_PCQ[1]) / 3
   d18.p_m[1] = -15 + 0.58 * (Tair_PCQ[1] * PCQ_pf[1] + Tair_OOS[1] * (1 - PCQ_pf[1])) # Precipitation d18O, ppt
-  PPCQ[1] = MAP[1] * PCQ_pf[1] * sin(2 * 3.141593 * tsc[1])
+  PPCQ[1] = MAP[1] * PCQ_pf[1] 
   h_m[1] = min(0.95, 0.25 + 0.7 * (PPCQ[1] / 900))
   Tair_PCQ[1] = MAT[1] + PCQ_to[1]
 
   ## Primary environmental ----
   d13Ca[1] ~ dunif(-8, -5) # Atmospheric d13C, ppt
   d13Ca.eps[1] = 0
-  # pCO2[1] ~ dunif(150, 500) # atmospheric CO2 mixing ratio
-  pCO2[1] ~ dnorm(300, 1/50^2)T(150, 500)
+  pCO2[1] ~ dunif(150, 500) # atmospheric CO2 mixing ratio
   pCO2.eps[1] = 0
   d18.p[1] ~ dnorm(d18.p_m[1], 1/1^2)
   MAT[1] ~ dunif(0, 20) # terrestrial temperature, C

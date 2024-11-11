@@ -49,42 +49,34 @@ mtext("Age (Ma)", 1, line = 2)
 dev.off()
 ## plot w/ iterations ----
 # for output without time-series model
-dt = 0.1
-ages = seq(-3, 0, by = dt)
+load("out/ts_fx_1e5_30ppm_0.05Ma.rda")
+dt = 0.05
+ages = seq(-2.6, 0, by = dt)
+dat.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian") %>% filter(age < 2.6)
+dat.age$age = -dat.age$age
 
+# ms = read.csv("data/loess_interglacial.csv") %>%
+#   filter(age < 2.6)
+# ages = sort(-unique(ms$age), decreasing = TRUE)
 ages = ages$ts
-ages = -ages
 
-plot(ages, post.clp$BUGSoutput$sims.list$pCO2[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(italic(p)*"CO"[2]), xlim = range(ages), ylim = c(100,400), col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
+plot(ages, post.clp$BUGSoutput$sims.list$pCO2[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(italic(p)*"CO"[2]), xlim = range(ages), ylim = c(100,500), col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
 for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$pCO2[i,], col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
+  lines(ages, post.clp$BUGSoutput$sims.list$pCO2[i,], col=rgb(red=0, green=0, blue=0, alpha=0.3), lwd=0.3)
 }
-lines(ages, post.clp$BUGSoutput$median$pCO2, col="red", lwd=1.5)
+lines(ages, post.clp$BUGSoutput$median$pCO2, col="red", lwd = 5)
+# dat.rs = cbind(dat.age$age, 100)
+# points(dat.rs[, 1], dat.rs[, 2], pch = 24, cex = 1)
+# points(ages, post.clp$BUGSoutput$median$pCO2, col="red")
 axis(2)
 axis(1)
-
-plot(ages, post.clp$BUGSoutput$sims.list$MAT[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("MAT")), xlim = range(ages), ylim = c(0, 20), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$MAT[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$MAT, col="darkgoldenrod2", lwd=2)
-axis(1)
-axis(2)
-
-plot(ages, post.clp$BUGSoutput$sims.list$MAP[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("MAP")), xlim = range(ages), ylim = c(100, 750), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$MAP[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$MAP, col="deepskyblue2", lwd=2)
-axis(1)
-axis(2)
 
 plot(ages, post.clp$BUGSoutput$sims.list$Tsoil[1,], type="l", axes = FALSE,
      xlab = "Age (Ma)", ylab = expression("Tsoil"), 
      xlim = range(ages), ylim = c(10, 25), 
      col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
 for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$Tsoil[i,], col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
+  lines(ages, post.clp$BUGSoutput$sims.list$Tsoil[i,], col=rgb(red=0, green=0, blue=0, alpha=0.3), lwd=0.3)
 }
 lines(ages, post.clp$BUGSoutput$median$Tsoil, col="palegreen", lwd=2)
 axis(1)
@@ -97,6 +89,39 @@ for (i in 2:500) {
 lines(ages, post.clp$BUGSoutput$median$PPCQ, col="deepskyblue2", lwd=2)
 axis(1)
 axis(2)
+
+plot(ages, post.clp$BUGSoutput$sims.list$S_z[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("S(z)")), xlim = range(ages), ylim = c(0, 5000), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+for (i in 2:500) {
+  lines(ages, post.clp$BUGSoutput$sims.list$S_z[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+}
+lines(ages, post.clp$BUGSoutput$median$S_z, col="darkgoldenrod2", lwd=2)
+axis(1)
+axis(2)
+
+plot(ages, post.clp$BUGSoutput$sims.list$MAT[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("MAT")), xlim = range(ages), ylim = c(0, 20), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+for (i in 2:500) {
+  lines(ages, post.clp$BUGSoutput$sims.list$MAT[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+}
+lines(ages, post.clp$BUGSoutput$median$MAT, col="darkgoldenrod2", lwd=2)
+axis(1)
+axis(2)
+
+plot(ages, post.clp$BUGSoutput$sims.list$PCQ_to[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("PCQ_to")), xlim = range(ages), ylim = c(10, 16), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+for (i in 2:500) {
+  lines(ages, post.clp$BUGSoutput$sims.list$PCQ_to[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+}
+lines(ages, post.clp$BUGSoutput$median$PCQ_to, col="palegreen", lwd=2)
+axis(1)
+axis(2)
+
+plot(ages, post.clp$BUGSoutput$sims.list$MAP[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("MAP")), xlim = range(ages), ylim = c(200, 800), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
+for (i in 2:500) {
+  lines(ages, post.clp$BUGSoutput$sims.list$MAP[i,], col=rgb(red=0, green=0, blue=0, alpha=0.2), lwd=0.3)
+}
+lines(ages, post.clp$BUGSoutput$median$MAP, col="deepskyblue2", lwd=2)
+axis(1)
+axis(2)
+
 
 
 ## plot w/ multi-section ----

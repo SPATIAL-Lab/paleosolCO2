@@ -21,10 +21,15 @@ model{
     d13Ca.pre[i] = 1 / d13Ca.obs[i, 2] ^ 2
   }
   
-  for(i in 1:length(D47c.ai)){
-    D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
-    D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
+  for (i in 1:length(MS.ai)) {
+    MS.obs[i, 1] ~ dnorm(MS[MS.ai[i]], MS.pre[i])
+    MS.pre[i] = 1 / MS.obs[i, 2] ^ 2
   }
+  
+    # for(i in 1:length(D47c.ai)){
+  #   D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
+  #   D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
+  # }
   
   for(i in 1:length(ai)){  
     
@@ -81,6 +86,9 @@ model{
     ### S(z)
     S_z_mol[i] = k ^ 2 * R_PCQ_S_0[i] / DIFC[i] * (1 - exp(-z[i] / k)) # (mol/cm3)
     S_z[i] = S_z_mol[i] * (0.08206 * Tsoil.K[i] * 10^9) # ppmv 
+    MS[i] = slope[i] * S_z[i] + intercept[i]
+    slope[i] ~ dnorm(0.17247, 1 / 0.04245^2)
+    intercept[i] ~ dnorm(44.73542, 1 / 27.85739^2)
 
     ### d13C of soil-respired CO2
     # DD13_water[i] = 25.09 - 1.2 * (MAP[i] + 975) / (27.2 + 0.04 * (MAP[i] + 975))
@@ -146,7 +154,7 @@ model{
   for(i in 2:length(ai)){
 
     ## Derived values ----
-    Tair_PCQ[i] = MAT[i] + PCQ_to[i]  * sin(2 * 3.141593 * tsc[i])
+    Tair_PCQ[i] = MAT[i] + PCQ_to[i] 
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_OOS[i] * (1 - PCQ_pf[i]) + Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
     PPCQ[i] = MAP[i] * PCQ_pf[i] 
@@ -255,7 +263,7 @@ model{
   ## Derived values ----
   Tair_OOS[1] = (4 * MAT[1] - Tair_PCQ[1]) / 3
   d18.p_m[1] = -15 + 0.58 * (Tair_PCQ[1] * PCQ_pf[1] + Tair_OOS[1] * (1 - PCQ_pf[1])) # Precipitation d18O, ppt
-  PPCQ[1] = MAP[1] * PCQ_pf[1] * sin(2 * 3.141593 * tsc[1])
+  PPCQ[1] = MAP[1] * PCQ_pf[1] 
   h_m[1] = min(0.95, 0.25 + 0.7 * (PPCQ[1] / 900))
   Tair_PCQ[1] = MAT[1] + PCQ_to[1]
 

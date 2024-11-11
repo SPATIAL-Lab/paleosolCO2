@@ -11,6 +11,11 @@ model{
     d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
   }
   
+  for(i in 1:length(d18Oc.ai2)){
+    d18Oc.obs2[i, 1] ~ dnorm(d18Oc.2[d18Oc.ai[i]], d18Oc.pre2[i])
+    d18Oc.pre2[i] = 1 / d18Oc.obs2[i, 2] ^ 2
+  }
+  
   for(i in 1:length(d13Co.ai)){
     d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
     d13Co.pre[i] = 1 / d13Co.obs[i, 2] ^ 2
@@ -21,10 +26,10 @@ model{
     d13Ca.pre[i] = 1 / d13Ca.obs[i, 2] ^ 2
   }
   
-  for(i in 1:length(D47c.ai)){
-    D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
-    D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
-  }
+  # for(i in 1:length(D47c.ai)){
+  #   D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
+  #   D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
+  # }
   
   for(i in 1:length(ai)){  
     
@@ -140,13 +145,15 @@ model{
     R18.c[i] = R18.s[i] * alpha18_c_w_eq[i]
     d18Oc[i] = (R18.c[i] / R18.VPDB - 1) * 1000
     D47c[i] = 0.0391e6 / Tsoil.K[i] ^ 2 + 0.154 # Andersen (2021)
+    S_z1[i] = abs(S_z[i]) + 1
+    d18Oc.2[i] = -1.7563 * log(S_z1[i]) + 0.5697
   }
   
   # Time dependent variables, time series ----
   for(i in 2:length(ai)){
 
     ## Derived values ----
-    Tair_PCQ[i] = MAT[i] + PCQ_to[i]  * sin(2 * 3.141593 * tsc[i])
+    Tair_PCQ[i] = MAT[i] + PCQ_to[i] 
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_OOS[i] * (1 - PCQ_pf[i]) + Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
     PPCQ[i] = MAP[i] * PCQ_pf[i] 
@@ -227,7 +234,7 @@ model{
   PCQ_to.tau ~ dgamma(10, 1) # 10, 1
   PCQ_to.phi ~ dbeta(2, 5)
 
-  MAP.tau ~ dgamma(10, 5e-3) # percentage
+  MAP.tau ~ dgamma(10, 5e-2) # percentage
   MAP.phi ~ dbeta(2, 5)
 
   PCQ_pf.tau ~ dgamma(10, 5e-3)
@@ -255,15 +262,15 @@ model{
   ## Derived values ----
   Tair_OOS[1] = (4 * MAT[1] - Tair_PCQ[1]) / 3
   d18.p_m[1] = -15 + 0.58 * (Tair_PCQ[1] * PCQ_pf[1] + Tair_OOS[1] * (1 - PCQ_pf[1])) # Precipitation d18O, ppt
-  PPCQ[1] = MAP[1] * PCQ_pf[1] * sin(2 * 3.141593 * tsc[1])
+  PPCQ[1] = MAP[1] * PCQ_pf[1] 
   h_m[1] = min(0.95, 0.25 + 0.7 * (PPCQ[1] / 900))
   Tair_PCQ[1] = MAT[1] + PCQ_to[1]
 
   ## Primary environmental ----
   d13Ca[1] ~ dunif(-8, -5) # Atmospheric d13C, ppt
   d13Ca.eps[1] = 0
-  # pCO2[1] ~ dunif(150, 500) # atmospheric CO2 mixing ratio
-  pCO2[1] ~ dnorm(300, 1/50^2)T(150, 500)
+  pCO2[1] ~ dunif(150, 500) # atmospheric CO2 mixing ratio
+  # pCO2[1] ~ dnorm(300, 1/50^2)T(150, 500)
   pCO2.eps[1] = 0
   d18.p[1] ~ dnorm(d18.p_m[1], 1/1^2)
   MAT[1] ~ dunif(0, 20) # terrestrial temperature, C

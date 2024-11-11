@@ -11,6 +11,11 @@ model{
     d18Oc.pre[i] = 1 / d18Oc.obs[i, 2] ^ 2
   }
   
+  for(i in 1:length(d18Oc.ai2)){
+    d18Oc.obs2[i, 1] ~ dnorm(d18Oc.2[d18Oc.ai2[i]], d18Oc.pre2[i])
+    d18Oc.pre2[i] = 1 / d18Oc.obs2[i, 2] ^ 2
+  }
+
   for(i in 1:length(d13Co.ai)){
     d13Co.obs[i, 1] ~ dnorm(d13Co[d13Co.ai[i]], d13Co.pre[i])
     d13Co.pre[i] = 1 / d13Co.obs[i, 2] ^ 2
@@ -21,10 +26,10 @@ model{
     d13Ca.pre[i] = 1 / d13Ca.obs[i, 2] ^ 2
   }
   
-  for(i in 1:length(D47c.ai)){
-    D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
-    D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
-  }
+  # for(i in 1:length(D47c.ai)){
+  #   D47c.obs[i, 1] ~ dnorm(D47c[D47c.ai[i]], D47c.pre[i])
+  #   D47c.pre[i] = 1 / D47c.obs[i, 2] ^ 2
+  # }
   
   
   for(i in 1:length(ai)){  
@@ -34,7 +39,7 @@ model{
     z_m[i] = z[i] / 100
     
     ## Soil temperatures at depth z
-    Tsoil[i] = MAT[i] + (PCQ_to[i] * sin(2 * 3.141593 * tsc[i] - z[i] / d)) / 
+    Tsoil[i] = MAT[i] + (PCQ_to[i] * sin(2 * 3.1415 * tsc[i] - z[i] / d)) / 
       exp(z[i] / d) 
     Tsoil.K[i] = Tsoil[i] + 273.15
     
@@ -71,7 +76,10 @@ model{
     ### S(z)
     S_z_mol[i] = k ^ 2 * R_PCQ_S_0[i] / DIFC[i] * (1 - exp(-z[i] / k)) # (mol/cm3)
     S_z[i] = S_z_mol[i] * (0.08206 * Tsoil.K[i] * 10^9) # ppmv
-
+    d18Oc.2[i] = -1.7563 * log(S_z[i]) + 0.5697 # inverted approach - Fuxian and Zhaojiachuan
+    # d18Oc.2[i] = -1.2364 * log(S_z[i]) - 1.7121 # bayesian approach - Fuxian and Zhaojiachuan
+    # d18Oc.2[i] = -1.8336 * log(S_z[i]) + 2.659 # bayesian approach - Luochuan, Fuxian and Zhaojiachuan
+    
     ### d13C of soil-respired CO2
     # DD13_water[i] = 25.09 - 1.2 * (MAP[i] + 975) / (27.2 + 0.04 * (MAP[i] + 975))
     # D13C_plant[i] = (28.26 * 0.22 * (pCO2[i] + 23.9)) / (28.26 + 0.22 * (pCO2[i] + 23.9)) - DD13_water[i] # schubert & Jahren (2015)
