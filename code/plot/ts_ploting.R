@@ -282,6 +282,7 @@ p1 = ggplot(fx.param, aes(x = age, y = median, fill = D47)) +
   scale_x_continuous(breaks = seq(-2.5, 0, 0.5))
 p1
 
+
 # plot.jpg ----
 load("out/ts_fx_1e5_30ppm_v2.rda")
 plot.jpi(ages, post.clp$BUGSoutput$sims.list$pCO2, n = 1000)

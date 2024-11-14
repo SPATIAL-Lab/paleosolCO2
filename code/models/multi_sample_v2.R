@@ -49,13 +49,18 @@ model{
                        0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50))
     PET_PCQ_D[i] = max(PET_PCQ_D.1[i], 0.01)
     PET_PCQ[i] = PET_PCQ_D[i] * 90
+    PET_D.1[i] = ifelse(ha[i] < 0.5, 
+                            0.013 * (MAT[i] / (MAT[i] + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha[i]) / 0.7)),
+                            0.013 * (MAT[i] / (MAT[i] + 15)) * (23.885 * Rs + 50))
+    PET_D[i] = max(PET_D.1[i], 0.01)
+    PET[i] = PET_D[i] * 365
     
     ## AET in mm/quarter from Budyko curve - Pike (1964)
     PPCQ[i] = MAP[i] * PCQ_pf[i] 
     AET_PCQ[i] = PPCQ[i] * (1 / (sqrt(1 + (1 / ((PET_PCQ[i] / (PPCQ[i])))) ^ 2)))
     
     ## Average rooting depth
-    AI[i] = PET_PCQ[i] / PPCQ[i]
+    AI[i] = PET[i] / MAP[i]
     L[i] = ifelse(AI[i] < 1.4, (-2 * AI[i]^2 + 2.5 * AI[i] + 1) * 100, 60)
     
     ## Carbon isotopes ----
@@ -149,15 +154,17 @@ model{
     ## Primary environmental ----
     d13Ca[i] ~ dunif(-8, -5) # Atmospheric d13C, ppt
     pCO2[i] ~ dunif(150, 500) # atmospheric CO2 mixing ratio
-    MAT[i] ~ dunif(0, 20)
-    PCQ_to[i] ~ dunif(10, 16)
+    MAT[i] ~ dunif(0, 15)
+    PCQ_to[i] ~ dunif(7, 15)
     MAP[i] ~ dunif(150, 750) # mean annual terrestrial site precipitation, mm
-    PCQ_pf[i] ~ dnorm(0.55, 1 / 0.5 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
+    PCQ_pf[i] ~ dnorm(0.44, 1 / 0.04 ^ 2) # PCQ precipitation fraction
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_PCQ[i] * PCQ_pf[i] + Tair_OOS[i] * (1 - PCQ_pf[i])), 1 / 1 ^ 2)
     
     ## Secondary soil ----
-    tsc[i] ~ dbeta(0.29 * 100 / 0.71, 100) # seasonal offset of PCQ for thermal diffusion
+    # z[i] ~ dunif(10, 40)
+    # tsc[i] ~ dbeta(0.29 * 100 / 0.71, 100) # seasonal offset of PCQ for thermal diffusion
+    tsc[i] ~ dunif(0.4, 0.5)
     h_m[i] = min(0.95, 0.25 + 0.7 * (PPCQ[i] / 900))
     ha[i] ~ dbeta(h_m[i] * 100 / (1 - h_m[i]), 100) # PCQ atmospheric humidity
     f_R[i] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
