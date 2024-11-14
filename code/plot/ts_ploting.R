@@ -10,8 +10,6 @@ theme = theme(panel.grid.major = element_blank(),
               plot.title = element_text(hjust = 0.1, vjust = -10))
 pal = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C")
 
-# View(post$BUGSoutput$summary)
-
 ## plot proxies ----
 par(mar = c(4, 4, 1, 4))
 plot(0.2, 0, xlim = c(-3, 0), ylim = c(0, 4), axes = FALSE, xlab = "", ylab = "")
@@ -57,20 +55,14 @@ mtext("Age (Ma)", 1, line = 2)
 
 dev.off()
 ## plot w/ iterations ----
-# for output without age model
-load("out/ts_lc_1e5_30ppm_MS.rda")
+load("out/ts_zjc_1e5_30ppm_v2.rda")
 dt = 0.1
 ages = seq(-2.6, 0, by = dt)
-# ages = -ages
-# dat.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan") %>% filter(age < 2600)
-# dat.age = - dat.age$age / 1000
 
-# ms = read.csv("data/data.csv") %>%
-#   filter(site == "Luochuan" & age < 2.6) %>% drop_na(d13Co)
-# ages = sort(-unique(ms$age), decreasing = TRUE)
-# ages = ages$ts
-
-plot(ages, post.clp$BUGSoutput$sims.list$pCO2[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(italic(p)*"CO"[2]), xlim = range(ages), ylim = c(100,500), col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
+plot(ages, post.clp$BUGSoutput$sims.list$pCO2[1,], type="l", axes = FALSE, 
+     xlab = "Age (Ma)", ylab = expression(italic(p)*"CO"[2]), 
+     xlim = range(ages), ylim = range(post.clp$BUGSoutput$sims.list$pCO2), 
+     col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
 for (i in 2:500) {
   lines(ages, post.clp$BUGSoutput$sims.list$pCO2[i,], col=rgb(red=0, green=0, blue=0, alpha=0.3), lwd=0.3)
 }
@@ -81,85 +73,26 @@ lines(ages, post.clp$BUGSoutput$median$pCO2, col="red", lwd = 5)
 axis(2)
 axis(1)
 
-plot(ages, post.clp$BUGSoutput$sims.list$Tsoil[1,], type="l", axes = FALSE,
-     xlab = "Age (Ma)", ylab = expression("Tsoil"), 
-     xlim = range(ages), ylim = c(10, 25), 
-     col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$Tsoil[i,], col=rgb(red=0, green=0, blue=0, alpha=0.3), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$Tsoil, col="palegreen", lwd=5)
-axis(1)
-axis(2)
-# dat.rs = cbind(dat.age, 10)
-# points(dat.rs[, 1], dat.rs[, 2], pch = 24, cex = 1)
-
-
-plot(ages, post.clp$BUGSoutput$sims.list$MAP[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("MAP")), xlim = range(ages), ylim = c(100, 750), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$MAP[i,], col=rgb(red=0, green=0, blue=0, alpha=0.2), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$MAP, col="deepskyblue2", lwd=5)
-axis(1)
-axis(2)
-
-plot(ages, post.clp$BUGSoutput$sims.list$PPCQ[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("PPCQ")), xlim = range(ages), ylim = c(0, 500), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$PPCQ[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$PPCQ, col="deepskyblue2", lwd=2)
-axis(1)
-axis(2)
-# dat.rs = cbind(dat.age, 0)
-# points(dat.rs[, 1], dat.rs[, 2], pch = 24, cex = 1)
-
-plot(ages, post.clp$BUGSoutput$sims.list$S_z[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("S(z)")), xlim = range(ages), ylim = c(0, 5000), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$S_z[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$S_z, col="darkgoldenrod2", lwd=2)
-axis(1)
-axis(2)
-
-plot(ages, post.clp$BUGSoutput$sims.list$MAT[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("MAT")), xlim = range(ages), ylim = c(0, 20), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$MAT[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$MAT, col="darkgoldenrod2", lwd=2)
-axis(1)
-axis(2)
-
-plot(ages, post.clp$BUGSoutput$sims.list$PCQ_to[1,], type="l", axes = FALSE, xlab = "Age (Ma)", ylab = expression(paste("PCQ_to")), xlim = range(ages), ylim = c(10, 16), col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$PCQ_to[i,], col=rgb(red=0, green=0, blue=0, alpha=0.05), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$PCQ_to, col="palegreen", lwd=2)
-axis(1)
-axis(2)
-
-
-
-
 ## plot w/ uncertainties ----
 # load data
 # w/o age model
-load("out/ms_fx_1e4.rda")
+load("out/ms_fx_1e4_v2.rda")
 ms.fx = post.clp
 fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-load("out/ms_zjc_1e4.rda")
+load("out/ms_zjc_1e4_v2.rda")
 ms.zjc = post.clp
 zjc.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
-load("out/ms_lc_1e4.rda")
-ms.lc = post.clp
-lc.age = read.csv("data/loess_interglacial.csv")
+# load("out/ms_lc_1e4.rda")
+# ms.lc = post.clp
+# lc.age = read.csv("data/loess_interglacial.csv")
 
 # w/ age model
-load("out/ts_fx_1e5_30ppm.rda")
+load("out/ts_fx_1e5_30ppm_v2.rda")
 ts.fx = post.clp
-load("out/ts_zjc_1e5_30ppm.rda")
+load("out/ts_zjc_1e5_30ppm_v2.rda")
 ts.zjc = post.clp
-load("out/ts_lc_1e5_30ppm.rda")
-ts.lc = post.clp
+# load("out/ts_lc_1e5_30ppm.rda")
+# ts.lc = post.clp
 age = seq(-2.6, 0, by = 0.1)
 
 # Any observations
@@ -207,7 +140,7 @@ p2 = ggplot(zjc.co2, aes(x = age, y = median, fill = age_model)) +
   scale_x_continuous(breaks = seq(0, 2.5, 0.5))
 
 ggarrange(p1, p2, nrow = 1, ncol = 2, common.legend = TRUE)
-ggsave("figure/ms_ts_comparison_MAP_normal.jpg", width = 7.3, height = 3.5)
+ggsave("figure/ms_ts_comparison_MAP.jpg", width = 7.3, height = 3.5)
 
 # interglacial
 lc.ms.param = data.frame(cbind("no", lc.age$age, 
@@ -314,9 +247,9 @@ mtext("Age (Ma)", 1, line = 2)
 dev.off()
 
 ## plot w/ and w/o D47 ----
-load("out/ts_fx_1e5_30ppm_normal_D47.rda")
+load("out/ts_fx_1e5_30ppm_D47_v2.rda")
 fx.47 = post.clp
-load("out/ts_fx_1e5_30ppm_normal.rda")
+load("out/ts_fx_1e5_30ppm_v2.rda")
 fx = post.clp
 dt = 0.1
 age = seq(-2.6, 0, by = dt)
@@ -338,68 +271,38 @@ p1 = ggplot(fx.param, aes(x = age, y = median, fill = D47)) +
   scale_fill_manual(values = c("firebrick2", "royalblue")) +
   scale_color_manual(values = c("firebrick2", "royalblue")) +
   theme_bw() + theme +
-  labs(x = "Age (Ma)", y = expression("S(z) (ppmv)"),
+  labs(x = "Age (Ma)", 
+       # y = "MAP (mm)",
+       # y = expression(paste("T (", degree, "C)")),
+       # y = expression(italic(p)*"CO"[2]*" (ppm)"),
+       y = expression("S(z) (ppmv)"),
        fill = expression(Delta[47]),
        color = expression(Delta[47])) +
   ggtitle("Fuxian") +
   scale_x_continuous(breaks = seq(-2.5, 0, 0.5))
 p1
 
-## plot.jpg ---- 
+# plot.jpg ----
+load("out/ts_fx_1e5_30ppm_v2.rda")
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$pCO2, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$pCO2, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$Tsoil, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$Tsoil, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$S_z, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$S_z, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$MAP, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$MAP, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$z_m, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$z_m, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$L, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$L, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$AI, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$AI, col="red", lwd = 5)
+plot.jpi(ages, post.clp$BUGSoutput$sims.list$z_m, n = 1000)
+lines(ages, post.clp$BUGSoutput$median$z_m, col="red", lwd = 5)
 
-post = post.clp
-plot.jpi(ages, post$BUGSoutput$sims.list$pCO2, ylim = c(0, 500))
 
-splot.jpi(ages, log10(post$BUGSoutput$sims.list$S_z))
+plot(ages, post.clp$BUGSoutput$mean$L)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$f_R)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$MAT)
 
-plot.jpi(ages, post$BUGSoutput$sims.list$MAP)
-# points(d13Cc$age, d13Cc$d13Cc)
-
-# plot.jpi(ages, post$BUGSoutput$sims.list$GMT)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$d13Ca)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$MAP)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$tsc)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$PCQ_to)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$Tsoil, n = 500)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$MAP)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$PCQ_pf)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$ha)
-
-plot.jpi(ages, post$BUGSoutput$sims.list$z_m)
-
-# Parameters ----
-co2.pri = density(runif(1e6, 100, 400))
-co2 = post.clp$BUGSoutput$sims.list$pCO2
-co2.post = density(post.clp$BUGSoutput$sims.list$pCO2[,20])
-
-# png("out/Parms.png", 9, 5, "in", res = 300)
-# layout(matrix(c(1, 2), nrow = 1))
-par(mai = c(1, 0.2, 0.2, 0.2))
-plot(co2.pri, xlim = range(co2.pri$x, co2.post$x),
-     ylim = range(co2.pri$y, co2.post$y), main = "", axes = FALSE,
-     xlab = expression("CO"[2]), lty = 2, lwd = 2)
-axis(1)
-axis(2, labels = FALSE)
-box()
-lines(co2.post, lwd = 2)
-
-# plot(ages, post.clp$BUGSoutput$mean$MAP, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$PPCQ, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$ha, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$MAT, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$Tsoil, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$S_z, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$z_m, type = "l")
-# plot(ages, post.clp$BUGSoutput$mean$d13Ca, type = "l")

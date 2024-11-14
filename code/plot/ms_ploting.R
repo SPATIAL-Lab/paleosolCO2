@@ -17,7 +17,7 @@ inv$age = inv$age / 1000
 zjc.inv = inv %>% filter(section == "Zhaojiachuan")
 fx.inv = inv %>% filter(section == "Fuxian")
 
-load("out/ms_zjc_1e4.rda")
+load("out/ms_zjc_1e4_d18c_v2.rda")
 zjc = post.clp
 zjc.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
 zjc.co2 = data.frame(cbind("zhaojiachuan", zjc.age$age, 
@@ -38,7 +38,7 @@ p1 = ggplot(zjc.co2, aes(x = age, y = median)) +
   scale_x_continuous(breaks = seq(0, 2.5, 0.5))
 p1
 
-load("out/ms_fx_1e4.rda")
+load("out/ms_fx_1e4_d18c_v2.rda")
 fx = post.clp
 fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
 fx.co2 = data.frame(cbind("fuxian", fx.age$age, 
@@ -63,7 +63,7 @@ ggarrange(p1, p2, nrow = 1, ncol = 2, align = "hv")
 # interglacial data 
 inv = read_xlsx("data/lc_inv.xlsx", sheet = 2)
 inv = inv[, c("age", "CO2", "CO2.low", "CO2.high")]
-load("out/ms_lc_1e4.rda")
+load("out/ms_lc_1e4_MS_v2.rda")
 lc = post.clp
 lc.age = read.csv("data/loess_interglacial.csv")
 lc.co2 = data.frame(cbind("luochuan", lc.age$age, 
@@ -86,14 +86,14 @@ ggarrange(p1, p2, p3, nrow = 1, ncol = 3, align = "hv")
 ggsave("figure/ms_inv_comparison.jpg", width = 12, height = 3.5)
 
 # d18c model ----
-load("out/ms_zjc_1e4.rda")
+load("out/ms_zjc_1e4_v2.rda")
 zjc = post.clp
 zjc.sz = post.clp$BUGSoutput$mean$S_z
 zjc.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
 zjc.age = zjc.age[order(zjc.age$age),]
 zjc.dat = data.frame("Zhaojiachuan", zjc.age$d18c, zjc.sz)
 names(zjc.dat) = c("site", "d18c", "Sz")
-load("out/ms_fx_1e4.rda")
+load("out/ms_fx_1e4_v2.rda")
 fx = post.clp
 fx.sz = post.clp$BUGSoutput$mean$S_z
 fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
@@ -112,24 +112,24 @@ ggplot(dat, aes(x = d18c, y = Sz)) +
        y = expression("S"[(z)]*" (ppm)"))
 
 # other parameters ----
-load("out/ms_zjc_1e4.rda")
+load("out/ms_zjc_1e4_v2.rda")
 zjc = post.clp
 zjc.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
-load("out/ms_fx_1e4.rda")
+load("out/ms_fx_1e4_v2.rda")
 fx = post.clp
 fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-load("out/ms_lc_1e4.rda")
+load("out/ms_lc_1e4_v2.rda")
 lc = post.clp
 lc.age = read.csv("data/loess_interglacial.csv")
 
 zjc.MAP = data.frame(cbind("Zhaojiachuan", zjc.age$age, 
-                           t(apply(zjc$BUGSoutput$sims.list$Tsoil, 2, quantile, 
+                           t(apply(zjc$BUGSoutput$sims.list$MAP, 2, quantile, 
                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 fx.MAP = data.frame(cbind("Fuxian", fx.age$age, 
-                           t(apply(fx$BUGSoutput$sims.list$Tsoil, 2, quantile, 
+                           t(apply(fx$BUGSoutput$sims.list$MAP, 2, quantile, 
                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 lc.MAP = data.frame(cbind("Luochuan", lc.age$age, 
-                          t(apply(lc$BUGSoutput$sims.list$Tsoil, 2, quantile, 
+                          t(apply(lc$BUGSoutput$sims.list$MAP, 2, quantile, 
                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 MAP = rbind(zjc.MAP, fx.MAP, lc.MAP)
 names(MAP) = c("site", "age", "x5", "x25", "median", "x75", "x95")
@@ -141,29 +141,25 @@ ggplot(MAP, aes(x = age, y = median, group = site, fill = site)) +
   scale_fill_manual(values = c("firebrick2", "royalblue", "gray")) +
   scale_color_manual(values = c("firebrick2", "royalblue", "black")) +
   theme_bw() + theme +
-  ggtitle("Tsoil") +
-  labs(x = "Age (Ma)", y = expression("Tsoil (degC)")) +
+  ggtitle("MAP") +
+  labs(x = "Age (Ma)", y = expression("MAP (mm)")) +
   scale_x_continuous(breaks = seq(0, 2.5, 0.5))
 
-
 ## Fuxian + D47 ----
-# CO2
-load("out/ms_fx_1e4.rda")
+load("out/ms_fx_1e4_v2.rda")
 fx = post.clp
 fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
 fx.age = fx.age[order(fx.age$age),]
-load("out/ms_fx_1e4_D47.rda")
-fx.47 = post.clp
-fx.age1 = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-fx.age2 = read.csv("data/data.csv") %>% drop_na(D47)
-ages = ts(fx.age1$age, fx.age2$age)
-ai = ages$ts
+load("out/ms_fx_1e4_D47.v2.rda")
+fx47 = post.clp
+fx47.age = read.csv("data/D47.csv")
+
 fx1 = data.frame(cbind("no", fx.age$age, 
-                          t(apply(fx$BUGSoutput$sims.list$DIFC, 2, quantile, 
+                          t(apply(fx$BUGSoutput$sims.list$MAP, 2, quantile, 
                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(fx1) = c("D47", "age", "x5", "x25", "median", "x75", "x95")
-fx2 = data.frame(cbind("yes", ai, 
-                           t(apply(fx.47$BUGSoutput$sims.list$DIFC, 2, quantile, 
+fx2 = data.frame(cbind("yes", fx47.age$age, 
+                           t(apply(fx47$BUGSoutput$sims.list$MAP, 2, quantile, 
                                    c(0.05, 0.25, 0.5, 0.75, 0.95)))))
 names(fx2) = c("D47", "age", "x5", "x25", "median", "x75", "x95")
 params = rbind(fx1, fx2)
@@ -178,6 +174,8 @@ ggplot(params, aes(x = age, y = median, fill = D47)) +
   theme_bw() + theme +
   # ggtitle("Zhaojiachuan") +
   labs(x = "Age (Ma)",
+       fill = expression(Delta[47]),
+       color = expression(Delta[47]),
        # y = expression(italic(p)*"CO"[2]*" (ppm)")
        # y = expression(paste("T"[soil]*" (", degree, "C)"))
        # y = expression("S"[z]*" (ppmv)")
@@ -189,17 +187,23 @@ ggplot(params, aes(x = age, y = median, fill = D47)) +
 # iteration ----
 source("code/constructors.R")
 source("code/helpers.R")
-load("out/clp1e4_ms.rda")
+load("out/ms_fx_1e4_v2.rda")
 
-post = post.clp1
-ages = age$age
-ages = unique(ages)
-plot.jpi(ages, post$BUGSoutput$sims.list$pCO2, n = 100)
-plot.jpi(ages, post$BUGSoutput$sims.list$MAP, n = 100)
-plot.jpi(ages, post$BUGSoutput$sims.list$PCQ_pf, n = 100)
-plot.jpi(ages, post$BUGSoutput$sims.list$MAT)
-plot.jpi(ages, post$BUGSoutput$sims.list$PCQ_to)
-plot.jpi(ages, post$BUGSoutput$sims.list$S_z)
-plot.jpi(ages, post$BUGSoutput$sims.list$f_R)
-plot.jpi(ages, post$BUGSoutput$sims.list$d18.p)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$pCO2, n = 100)
+lines(ai, post.clp$BUGSoutput$median$pCO2, col="red", lwd = 5)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$S_z, n = 100, ylim = c(0, 3000))
+lines(ai, post.clp$BUGSoutput$median$S_z, col="red", lwd = 5)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$Tsoil, n = 100)
+lines(ai, post.clp$BUGSoutput$median$Tsoil, col="red", lwd = 5)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$d18O.s, n = 100)
+lines(ai, post.clp$BUGSoutput$median$d18O.s, col="red", lwd = 5)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$MAP, n = 100)
+lines(ai, post.clp$BUGSoutput$median$MAP, col="red", lwd = 5)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$PCQ_to, n = 100)
+lines(ai, post.clp$BUGSoutput$median$PCQ_to, col="red", lwd = 5)
+plot.jpi(ai, post.clp$BUGSoutput$sims.list$PPCQ, n = 100)
+lines(ai, post.clp$BUGSoutput$median$PPCQ, col="red", lwd = 5)
 
+dat = read_csv("data/loess_interglacial.csv")
+plot(x = dat$age, y = dat$d18c)
+lines(dat$age, dat$d18c)
