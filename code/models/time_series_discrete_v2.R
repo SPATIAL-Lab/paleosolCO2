@@ -68,7 +68,7 @@ model{
     
     ## Carbon isotopes ----
     ### Free air porosity
-    FAP.1[i] = min((pore - ((PPCQ[i] - AET_PCQ[i]) / (L[i] * 10 * pore))), pore - 0.05)
+    FAP.1[i] = min((pore[i] - ((PPCQ[i] - AET_PCQ[i]) / (L[i] * 10 * pore[i]))), pore[i] - 0.05)
     FAP[i] = max(FAP.1[i], 0.01)
     
     ### Soil respiration rate 
@@ -83,7 +83,7 @@ model{
     ### Convert to molC/cm3/s
     R_PCQ_D.1[i] = R_PCQ_D[i] / (12.01 * 100 ^ 2)  # from gC/m2/d to molC/cm2/d
     R_PCQ_S[i] = R_PCQ_D.1[i] / (24 * 3600)  # molC/ cm2 / s
-    R_PCQ_S_0[i]= R_PCQ_S[i] / (L[i] * pore) # Quade et al. (2007)
+    R_PCQ_S_0[i]= R_PCQ_S[i] / (L[i] * pore[i]) # Quade et al. (2007)
     
     ### CO2 diffusion
     Dair[i] = 0.1369 * (Tsoil.K[i] / 273.15) ^ 1.958
@@ -124,13 +124,14 @@ model{
     ### Water vapor diffusivity
     es[i] = (0.611 * exp(17.502 * Tsoil[i] / (Tsoil[i] + 240.97))) * 1000 # saturated water vapor pressure from Tetens formula
     N.sat[i] = 0.01802 * es[i] / (Rgas * Tsoil.K[i]) # saturated water vapor concentration at a given temperature
-    z.bar[i] = N.sat[i] * Dv.soil / (E_s[i] * rho) # penetration depth (m)
+    Dv.soil[i] = Dv.air * tort * (pore[i] - 0.05) # effective diffusivity of water vapor in soil (m2/s)
+    z.bar[i] = N.sat[i] * Dv.soil[i] / (E_s[i] * rho) # penetration depth (m)
     z.ef1[i] = (1 - ha[i]) * z.bar[i] # the thickness of the water vapor phase region (m)
     z.ef[i] = max(z.ef1[i], 1e-10)
     
     ### Liquid water diffusivity (m2/s) (Easteal 1984)
     Dl[i] = exp(1.6766 + 1.6817 * (1000 / Tsoil.K[i]) - 0.5773 * (1000 / Tsoil.K[i]) ^ 2) * 1e-9 
-    Dl.soil[i] = Dl[i] * pore * tort # effective diffusivity of liquid water (m2/s)
+    Dl.soil[i] = Dl[i] * pore[i] * tort # effective diffusivity of liquid water (m2/s)
     z.hat[i] = Dl.soil[i] / E_s[i] # the decay length (mean penetration depth)
     
     ### The evaporation front
@@ -140,7 +141,7 @@ model{
     
     ### Isotope composition of soil water at depth z
     hs[i] = min(ha[i] + z_m[i] / z.bar[i], 1)
-    z.f[i] = (pore / a.theta) * log(z_m[i] / z.ef[i]) # the modified depth function
+    z.f[i] = (pore[i] / a.theta) * log(z_m[i] / z.ef[i]) # the modified depth function
     R18.s[i] = ifelse(z_m[i] <= z.ef[i], 
                       (alpha18.diff * R18.p[i] * z_m[i] / z.bar[i] + ha[i] * R18.a[i]) / 
                         (hs[i] * alpha18.eq[i]),
@@ -218,8 +219,12 @@ model{
     d13Cr[i] = d13Cr[i - 1] + d13Cr.eps[i]
     d13Cr.eps[i] ~ dnorm(d13Cr.eps[i - 1] * (d13Cr.phi ^ dt), d13Cr.pc[i])
     d13Cr.pc[i] = d13Cr.tau * ((1 - d13Cr.phi ^ 2) / (1 - d13Cr.phi ^ (2 * dt)))
-  }
-
+    
+    pore[i] = pore[i - 1] + pore.eps[i]
+    pore.eps[i] ~ dnorm(pore.eps[i - 1] * (pore.phi ^ dt), pore.pc[i])
+    pore.pc[i] = pore.tau * ((1 - pore.phi ^ 2) / (1 - pore.phi ^ (2 * dt)))
+}
+  
   # Time dependent variables, ts parameters ----
   pCO2.tau ~ dgamma(10, 10e3) # 10, 10e3
   pCO2.phi ~ dbeta(2, 5)
@@ -230,13 +235,13 @@ model{
   PCQ_to.tau ~ dgamma(10, 1) # 10, 1
   PCQ_to.phi ~ dbeta(2, 5)
 
-  MAP.tau ~ dgamma(10, 5e-3) # percentage
+  MAP.tau ~ dgamma(10, 1e-2) # percentage
   MAP.phi ~ dbeta(2, 5)
 
   PCQ_pf.tau ~ dgamma(10, 5e-3)
   PCQ_pf.phi ~ dbeta(2, 5)
 
-  tsc.tau ~ dgamma(10, 1e-5)
+  tsc.tau ~ dgamma(10, 1e-3)
   tsc.phi ~ dbeta(2, 5)
 
   # ha.tau ~ dgamma(10, 1e-2)
@@ -251,28 +256,29 @@ model{
   d13Cr.tau ~ dgamma(10, 10)
   d13Cr.phi ~ dbeta(5, 2)
 
-  ETR.tau ~ dgamma(10, 1e-6)
+  ETR.tau ~ dgamma(10, 1e-5)
   ETR.phi ~ dbeta(2, 5)
+  
+  pore.tau ~ dgamma(10, 1e-3)
+  pore.phi ~ dbeta(2, 5)
 
   ## Primary environmental ----
   d13Ca[1] ~ dunif(-8, -5) # Atmospheric d13C, ppt
   d13Ca.eps[1] = 0
-  # pCO2[1] ~ dunif(150, 500) # atmospheric CO2 mixing ratio
-  pCO2[1] ~ dnorm(300, 1/50^2)T(150, 500)
+  pCO2[1] ~ dunif(150, 450) # atmospheric CO2 mixing ratio
+  # pCO2[1] ~ dnorm(300, 1/50^2)T(150, 500)
   pCO2.eps[1] = 0
-  MAT[1] ~ dunif(0, 20) # terrestrial temperature, C
+  MAT[1] ~ dunif(10, 17) # terrestrial temperature, C
   MAT.eps[1] = 0
-  PCQ_to[1] ~ dunif(10, 16) # PCQ temperature offset, C
+  PCQ_to[1] ~ dunif(7, 15) # PCQ temperature offset, C
   PCQ_to.eps[1] = 0
-  MAP[1] ~ dunif(150, 750) # mean annual precipitation, mm
+  MAP[1] ~ dunif(200, 750) # mean annual precipitation, mm
   MAP.eps[1] = 0
-  PCQ_pf[1] ~ dnorm(0.55, 1 / 0.5 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
+  PCQ_pf[1] ~ dunif(0.26, 0.55) # PCQ precipitation fraction
   PCQ_pf.eps[1] = 0
-  # ha[1] ~ dbeta(h_m[1] * 100 / (1 - h_m[1]), 100)
-  # ha.eps[1] = 0
-  
+
   ## Secondary soil ----
-  tsc[1] ~ dbeta(0.29 * 1e3 / 0.71, 1e3) # seasonal offset of PCQ for thermal diffusion
+  tsc[1] ~ dunif(0.34, 0.55) # seasonal offset of PCQ for thermal diffusion
   tsc.eps[1] = 0
   f_R[1] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
   f_R.eps[1] = 0
@@ -280,14 +286,14 @@ model{
   ETR.eps[1] = 0 
   d13Cr[1] ~ dunif(-30, -20)
   d13Cr.eps[1] = 0
+  pore[1] ~ dunif(0.45, 0.54) # soil porosity
+  pore.eps[1] = 0
   
   # Not time dependent ----
   lat = 30 # terrestrial site latitude
   Ra = 42.608 - 0.3538 * abs(lat) # total radiation at the top of the atmosphere
   Rs = Ra * 0.16 * sqrt(12) # daily temperature range assumed to be 12
-  pore ~ dbeta(0.45 * 100 / 0.55, 100)T(0.06,) # soil porosity
   tort ~ dbeta(0.7 * 100 / 0.3, 100) # soil tortuosity
-  Dv.soil = Dv.air * tort * (pore - 0.05) # effective diffusivity of water vapor in soil (m2/s)
   SOM.frac ~ dunif(-0.5, 0.5)
   
   ## Constants ----

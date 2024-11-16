@@ -33,7 +33,6 @@ d18Oc = na.exclude(clp[c("age", "d18c", "d18c.stdev")])
 d13Co = na.exclude(clp[c("age", "d13o", "d13o.stdev")])
 D47c = na.exclude(D47[c("age", "D47", "D47.sd")])
 d13Ca = na.exclude(clp[c("age", "d13a", "d13a.stdev")])
-# MS = na.exclude(clp[c("age", "MS", "MS.stdev")])
 
 # ages = clp$age
 # dt = abs(diff(ages, lag = 1))
@@ -43,25 +42,22 @@ d18Oc.ai = get.ind(d18Oc$age, ages)
 d13Cc.ai = get.ind(d13Cc$age, ages)
 d13Co.ai = get.ind(d13Co$age, ages)
 D47c.ai = get.ind(D47c$age, ages)
-# MS.ai = get.ind(MS$age, ages)
 d13Ca.ai = get.ind(d13Ca$age, ages)
 
 d = list(ai = ages, dt = dt,
          d13Cc.obs = d13Cc[, 2:3], d13Cc.ai = d13Cc.ai,
          d18Oc.obs = d18Oc[, 2:3], d18Oc.ai = d18Oc.ai,
-         # d18Oc.obs2 = d18Oc[, 2:3], d18Oc.ai2 = d18Oc.ai,
          d13Co.obs = d13Co[, 2:3], d13Co.ai = d13Co.ai,
          # D47c.obs = D47c[, 2:3], D47c.ai = D47c.ai,
-         # MS.obs = MS[, 2:3], MS.ai = MS.ai,
          d13Ca.obs = d13Ca[, 2:3], d13Ca.ai = d13Ca.ai)
 
-parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18.p", 
-          "d18O.s", "AET_PCQ", "z_m", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "k", "AI")
+parms = c("pCO2", "MAT", "Tsoil", "tsc", "MAP", "PCQ_pf", "d18.p",
+          "AET_PCQ", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "pore", "AI")
 
 system.time({post.clp = jags.parallel(d, NULL, parms, "code/models/time_series_discrete_v2.R", 
                         n.iter = 1e5, n.chains = 3, n.burnin = 3e4)})
-`sum_clp = post.clp$BUGSoutput$summary
+sum_clp = post.clp$BUGSoutput$summary
 
-save(post.clp, file = "out/ts_fx_1e5_30ppm_normal_D47_v2.rda")
+save(post.clp, file = "out/ts_lc_1e5.rda")
 load("out/ts_lc_1e5_30ppm_v2.rda")
 # traceplot(post.clp, varname = "Ratio")

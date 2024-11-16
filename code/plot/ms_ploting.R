@@ -6,7 +6,7 @@ theme = theme(panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(),
               axis.text = element_text(size = 10),
               plot.title = element_text(hjust = 0.1, vjust = -10))
-# function to create data frame used to draw parameter curves
+# function to create data frame used to plot parameter curves
 fm = function(site, var, param) {
   if(site == "Luochuan") {
     age = read.csv("data/loess_interglacial.csv")
@@ -24,25 +24,26 @@ fm = function(site, var, param) {
 # input params constraints ----
 load("out/ms_fx_1e4.rda")
 base = post.clp
-load("out/ms_params_constraint/ms_fx_MAP_1e4.rda")
-param = post.clp
-dat.base = fm("Fuxian", "Tsoil", base)
-dat.param = fm("Fuxian", "Tsoil", param)
+load("out/ms_params_constraint/ms_fx_pCO2_1e4.rda")
+test = post.clp
+param = "MAP"
+dat.base = fm("Fuxian", param, base)
+dat.test = fm("Fuxian", param, test)
 ggplot(dat.base, aes(x = age, y = median)) +
   geom_ribbon(aes(ymin = x25, ymax = x75), fill = "salmon", alpha = 0.3) +
-  geom_ribbon(data = dat.param, aes(x = age, y = median, ymin = x25, ymax = x75), fill = "royalblue1", alpha = 0.3) +
+  geom_ribbon(data = dat.test, aes(x = age, y = median, ymin = x25, ymax = x75), fill = "royalblue1", alpha = 0.3) +
   geom_point(color = "firebrick2", shape = 21, size = 3) +
-  geom_point(data = dat.param, aes(x = age, y = median), color = "royalblue", shape = 21, size = 3) +
+  geom_point(data = dat.test, aes(x = age, y = median), color = "royalblue", shape = 21, size = 3) +
   theme_bw() + theme +
-  ggtitle("MAP") + 
+  ggtitle(param) + 
   theme(plot.title = element_text(hjust = 0.9)) +
   labs(x = "Age (Ma)", 
        # y = expression(italic(p)*"CO"[2]*" (ppm)")
-       # y = "MAP (mm)"
-       y = expression(paste("T"[soil]*" (", degree, "C)"))
+       y = "MAP (mm)"
+       # y = expression(paste("T"[soil]*" (", degree, "C)"))
        ) +
   scale_x_continuous(breaks = seq(0, 2.5, 0.5))
-ggsave("figure/prior_constraints_ms/MAP_MAT.jpg", width = 4.9, height = 3.5)
+ggsave(paste("figure/prior_constraints_ms/CO2_", param,".jpg", sep = ""), width = 4.9, height = 3.5)
 
 # inverted vs bayes w/o age model ----
 # glacial data
@@ -143,42 +144,63 @@ p2 = ggplot(inv, aes(x = d18c, y = Sz)) +
   labs(x = expression(delta^"18"*"O"[c]*" (\u2030)"),
        y = expression("S"[(z)]*" (ppm)"), fill = "") +
   scale_y_continuous(limits = c(200, 1100))
+p2
 ggarrange(p2, p1, nrow = 1, ncol = 2, align = "hv", common.legend = TRUE)
 ggsave("figure/d18c_Sz_model.jpeg", width = 5.1, height = 3.1)
 
-# other parameters ----
-load("out/ms_zjc_1e4_v2.rda")
-zjc = post.clp
-zjc.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
-load("out/ms_fx_1e4_v2.rda")
+# fixed z (20cm)
+load("out/ms_fx_1e4_20cm.rda")
 fx = post.clp
-fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-load("out/ms_lc_1e4_v2.rda")
+fx.ms = fm("Fuxian", "S_z", fx)
+fx.d18 = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
+fx.sz = data.frame(cbind("Fuxian", fx.d18$d18c, fx.ms$median, fx.ms$x25, fx.ms$x75))
+load("out/ms_zjc_1e4_20cm.rda")
+zjc = post.clp
+zjc.ms = fm("Zhaojiachuan", "S_z", zjc)
+zjc.d18 = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
+zjc.sz = data.frame(cbind("Zhaojiachuan", zjc.d18$d18c, zjc.ms$median, zjc.ms$x25, zjc.ms$x75))
+dat = rbind(fx.sz, zjc.sz)
+names(zjc.sz) = c("site", "d18c", "Sz", "Sz.low", "Sz.high")
+dat[,2:5] = lapply(dat[,2:5], as.numeric)
+m3 = nls(data = dat, Sz ~ a*exp(-b*d18c), start = list(a = 30, b = 0.3))
+dat$Sz_pred = predict(m3, newdata = dat)
+p3 = ggplot(dat, aes(x = d18c, y = Sz)) +
+  geom_errorbar(aes(ymin = Sz.low, ymax = Sz.high), size = 0.2, width = 0, color = "ivory3") +
+  geom_point(aes(fill = site), size = 3, shape = 21) +
+  scale_fill_brewer(palette = "Paired") +
+  geom_line(aes(x = d18c, y = Sz_pred), linetype = "dashed", linewidth = 1) +
+  theme_bw() + theme +
+  labs(x = expression(delta^"18"*"O"[c]*" (\u2030)"),
+       y = expression("S"[(z)]*" (ppm)"), fill = "") +
+  scale_y_continuous(limits = c(200, 1100))
+p3
+
+# other parameters ----
+load("out/ms_zjc_1e4.rda")
+zjc = post.clp
+load("out/ms_fx_1e4.rda")
+fx = post.clp
+load("out/ms_lc_1e4.rda")
 lc = post.clp
-lc.age = read.csv("data/loess_interglacial.csv")
+param = "S_z"
+fx.ms = fm("Fuxian", param, fx)
+zjc.ms = fm("Zhaojiachuan", param, zjc)
+lc.ms = fm("Luochuan", param, lc)
+dat = rbind(fx.ms, zjc.ms, lc.ms)
+names(dat) = c("site", "age", "x5", "x25", "median", "x75", "x95")
+dat[,2:7] = lapply(dat[,2:7], as.numeric)
 
-zjc.MAP = data.frame(cbind("Zhaojiachuan", zjc.age$age, 
-                           t(apply(zjc$BUGSoutput$sims.list$MAP, 2, quantile, 
-                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-fx.MAP = data.frame(cbind("Fuxian", fx.age$age, 
-                           t(apply(fx$BUGSoutput$sims.list$MAP, 2, quantile, 
-                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-lc.MAP = data.frame(cbind("Luochuan", lc.age$age, 
-                          t(apply(lc$BUGSoutput$sims.list$MAP, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-MAP = rbind(zjc.MAP, fx.MAP, lc.MAP)
-names(MAP) = c("site", "age", "x5", "x25", "median", "x75", "x95")
-MAP[,2:7] = lapply(MAP[,2:7], as.numeric)
-
-ggplot(MAP, aes(x = age, y = median, group = site, fill = site)) +
-  geom_ribbon(aes(ymin = x5, ymax = x95), alpha = 0.3) +
+ggplot(dat, aes(x = age, y = median)) +
+  geom_ribbon(aes(fill = site, ymin = x5, ymax = x95), alpha = 0.3) +
   geom_line(aes(color = site)) +
+  geom_point(aes(color = site), shape = 21, fill = "white", size = 2) +
   scale_fill_manual(values = c("firebrick2", "royalblue", "gray")) +
   scale_color_manual(values = c("firebrick2", "royalblue", "black")) +
   theme_bw() + theme +
-  ggtitle("MAP") +
-  labs(x = "Age (Ma)", y = expression("MAP (mm)")) +
+  ggtitle(param) +
+  labs(x = "Age (Ma)", y = param) +
   scale_x_continuous(breaks = seq(0, 2.5, 0.5))
+ggsave(paste("figure/ms_", param, ".jpg", sep = ""), width = 5.8, height = 3.1)
 
 ## Fuxian + D47 ----
 load("out/ms_fx_1e4_v2.rda")

@@ -31,11 +31,10 @@ model{
     ## Depth to carbonate formation based on Retallack (2005) data, meters
     z.min[i] = MAP[i] * 0.0925 + 13.4
     z.thick[i] = abs(PPCQ[i] - MAP[i] / 4) * 0.74 + 17.3
-    z[i] = z.min[i] + z.thick[i] / 2
-    # z.mean[i] = (0.093 * MAP[i] + 13.12)
-    # z.beta[i] = z.mean[i] / (22 ^ 2)
-    # z.alpha[i] = z.mean[i] * z.beta[i]
-    # z[i] ~ dgamma(z.alpha[i], z.beta[i])
+    z.mean[i] = z.min[i] + z.thick[i] / 2
+    z.beta[i] = z.mean[i] / (22 ^ 2)
+    z.alpha[i] = z.mean[i] * z.beta[i]
+    z[i] ~ dgamma(z.alpha[i], z.beta[i])
     z_m[i] = z[i] / 100
 
     ## Soil temperatures at depth z
@@ -154,10 +153,10 @@ model{
     ## Primary environmental ----
     d13Ca[i] ~ dunif(-8, -5) # Atmospheric d13C, ppt
     pCO2[i] ~ dunif(150, 450) # atmospheric CO2 mixing ratio
-    MAT[i] ~ dunif(7, 13) # mean annual temperature
+    MAT[i] ~ dunif(10, 17) # mean annual temperature
     PCQ_to[i] ~ dunif(7, 15)
-    MAP[i] ~ dunif(100, 400) # mean annual precipitation, mm
-    PCQ_pf[i] ~ dunif(0.4, 0.55) # PCQ precipitation fraction
+    MAP[i] ~ dunif(200, 750) # mean annual precipitation, mm
+    PCQ_pf[i] ~ dunif(0.26, 0.55) # PCQ precipitation fraction
     Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
     d18p_PCQ[i] = -15 + 0.58 * Tair_PCQ[i]
     d18p_OOS[i] = -15 + 0.58 * Tair_OOS[i]
@@ -166,7 +165,7 @@ model{
     
     ## Secondary soil ----
     # tsc[i] ~ dbeta(0.29 * 100 / 0.71, 100) # seasonal offset of PCQ for thermal diffusion
-    tsc[i] ~ dunif(0.4, 0.5)
+    tsc[i] ~ dunif(0.34, 0.55)
     h_m[i] = min(0.95, 0.25 + 0.7 * (PPCQ[i] / 900))
     ha[i] ~ dbeta(h_m[i] * 100 / (1 - h_m[i]), 100) # PCQ atmospheric humidity
     f_R[i] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
