@@ -6,13 +6,10 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read and groom data ----
-clp = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-clp = clp[,1:8]
-# D47 = read.csv("data/D47.csv")
-# clp$D47 = approx(D47$age, D47$D47, xout = clp$age)$y
-# clp$D47.sd = approx(D47$age, D47$D47.sd, xout = clp$age)$y
-# clp = read.csv("data/loess_interglacial.csv") %>% filter(age < 2.6)
-# clp = clp[,1:9]
+# clp = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
+# clp = clp[,1:8]
+clp = read.csv("data/loess_interglacial.csv") %>% filter(age < 2.6)
+clp = clp[,1:9]
 # clp = read.csv("data/D47.csv")
 # clp = clp[order(clp$age),]
 
@@ -31,10 +28,10 @@ d13Cc = na.exclude(clp[c("age", "d13c", "d13c.stdev")])
 d18Oc = na.exclude(clp[c("age", "d18c", "d18c.stdev")])
 d13Co = na.exclude(clp[c("age", "d13o", "d13o.stdev")])
 d13Ca = na.exclude(clp[c("age", "d13a", "d13a.stdev")])
-D47c = na.exclude(clp[c("age", "D47", "D47.sd")])
+# D47c = na.exclude(clp[c("age", "D47", "D47.sd")])
 # MS = na.exclude(clp[c("age", "MS", "MS.stdev")])
 
-ages = ts(d13Cc$age, d18Oc$age, d13Co$age, d13Ca$age, D47c$age) # , D47c$age , MS$age
+ages = ts(d13Cc$age, d18Oc$age, d13Co$age, d13Ca$age) # , D47c$age , MS$age
 tsi = ages$ts_ind
 ai = ages$ts
 
@@ -45,17 +42,17 @@ d = list(ai = ages$ts,
          # d18Oc.obs2 = d18Oc[, 2:3], d18Oc.ai2 = tsi[[2]],
          d13Co.obs = d13Co[, 2:3], d13Co.ai = tsi[[3]],
          d13Ca.obs = d13Ca[, 2:3], d13Ca.ai = tsi[[4]]
-         , D47c.obs = D47c[, 2:3], D47c.ai = tsi[[5]]
+         # , D47c.obs = D47c[, 2:3], D47c.ai = tsi[[5]]
          # , MS.obs = MS[, 2:3], MS.ai = tsi[[5]]
 )
 
-parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18.p", 
-          "d18O.s", "AET_PCQ", "z_m", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "k", "AI")
+parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18p", 
+          "d18O.s", "pore", "z_m", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "AI")
 
 system.time({post.clp = jags.parallel(d, NULL, parms, "code/models/multi_sample_v2.R",
                                       n.iter = 1e4, n.chains = 3, n.burnin = 3e3)})
 
 sum.clp = post.clp$BUGSoutput$summary
-save(post.clp, file = "out/ms_lc_1e4_MS_v2.rda")
+save(post.clp, file = "out/ms_lc_1e4.rda")
 load("out/ms_zjc_1e4_d18c.rda")
 # traceplot(post.clp, varname = "MAP")

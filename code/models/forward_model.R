@@ -1,20 +1,20 @@
 ctrl = function(){
   vars = list(
-    pCO2 = 400,
+    pCO2 = 300,
     MAT = 15,
     MAP = 500,
-    PCQ.pf = 0.5,
-    PCQ_to = 15,
-    # d18.p = -12,
+    PCQ.pf = 0.25,
+    PCQ_to = 10,
     tsc = 0.3,
     lat = 35,
-    ha = 0.35,
-    L = 40,
     pore = 0.35,
     tort = 0.7,
-    f_R = 0.15,
-    d13Ca = -6.5,
-    ETR = 0.06
+    f_R = 0.11,
+    spre = 0.55,
+    ETR = 0.06,
+    d13Ca = -8,
+    theta_bar = 0.065 # mean water content [0.05, 0.5]
+    # ,d13Cr = -25
   )
 }
 
@@ -36,48 +36,48 @@ fm = function(vars){
   # Derived values ----
   PPCQ = MAP * PCQ.pf 
   TmPCQ = MAT + PCQ_to # air temperature of pedogenic carbonate quarter
-  TmOOS = (4*MAT - TmPCQ)/3 # out-of-season air temperature
-  d18.p = -15 + 0.58 * (TmPCQ * PCQ.pf + TmOOS * (1 - PCQ.pf)) # Precipitation d18O, ppt
   Ra = 42.608 - 0.3538 * abs(lat) # total radiation at the top of the atmosphere
   Rs = Ra * 0.16 * sqrt(12) # daily temperature range assumed to be 12
-  k = L / 2 / log(2) # Respiration characteristic production depth (cm) - Quade (2007)
   
   # soil parameters ----
   ## Depth to carbonate formation based on  Retallack (2005) data
-  z = 0.093 * MAP + 13.12
+  z = 0.0925 * MAP + 13.4
   z_m = z / 100 # in meter unit 
   
   ## Soil temperatures at depth z
   d = sqrt((2 * 0.0007) / ((2 * 3.1415 / 3.154e7) * 0.3))
-  Tsoil = MAT + (PCQ_to * sin(2 * 3.1415 * tsc - z / d)) / exp(z / d) 
+  Tsoil = MAT + PCQ_to * sin(2 * 3.1415 * tsc - z / d) / exp(z / d) 
   Tsoil.K = Tsoil + 273.15
   
   ## Potential Evapotranspiration - Hargreaves and Samani (1982) and Turc (1961)
-  PET = function(ha, t){
-    if(ha < 0.5){
-      0.013 * (t / (t + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha) / 0.7))
-    }else{
-      0.013 * (t / (t + 15)) * (23.885 * Rs + 50)
-    }
-  }
-  PET_PCQ_D = as.vector(sapply(ha, FUN = PET, t = TmPCQ))
+  ha = pmin(0.95, 0.25 + 0.7 * (PPCQ / 900))
+  PET_PCQ_D = ifelse(ha < 0.5, 
+                     0.013 * (TmPCQ / (TmPCQ + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha) / 0.7)),
+                     0.013 * (TmPCQ / (TmPCQ + 15)) * (23.885 * Rs + 50))
   PET_PCQ_D = pmax(PET_PCQ_D, 0.01)
   PET_PCQ = PET_PCQ_D * 90
+  PET_D = ifelse(ha < 0.5, 
+                 0.013 * (MAT / (MAT + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha) / 0.7)),
+                 0.013 * (MAT / (MAT + 15)) * (23.885 * Rs + 50))
+  PET_D = pmax(PET_D, 0.01)
+  PET = PET_D * 365
   
   ## AET in mm/quarter from Budyko curve - Pike (1964)
   AET_PCQ = PPCQ * (1 / (sqrt(1 + (1 / ((PET_PCQ / (PPCQ)))) ^ 2)))
-  
+
   # Carbon isotope ----
   ## Free air porosity
-  FAP1 = min((pore - ((PPCQ - AET_PCQ) / (L * 10 * pore))), pore - 0.05)
-  FAP = max(FAP1, 0.01)
+  AI = PET / MAP
+  L = ifelse(AI < 1.4, (-2 * AI^2 + 2.5 * AI + 1) * 100, 60) # mean rooting depth
+  FAP = pmin((pore - ((PPCQ - AET_PCQ) / (L * 10 * pore))), pore - 0.05)
+  FAP = pmax(FAP, 0.01)
   
   ## Soil respiration rate 
-  R_PCQ_D_m1 = 1.25 * exp(0.05452 * TmPCQ) * PPCQ / (127.77 + PPCQ)  # Raich (2002)
+  R_PCQ_D = 1.25 * exp(0.05452 * TmPCQ) * PPCQ / (127.77 + PPCQ)  # Raich (2002)
   # R_PCQ_D_m1 = 1.25 * exp(0.07987 * MAT) * MAP / (29.86 + MAP) # CLP model
-  R_PCQ_D = R_PCQ_D_m1 * f_R # (gC/m2/d)
-  R_PCQ_D1 = R_PCQ_D / (12.01 * 100^2)  # from gC/m2/d to molC/cm2/d
-  R_PCQ_S = R_PCQ_D1 / (24 * 3600)  # molC/ cm2 / s
+  R_PCQ_D = R_PCQ_D * f_R # (gC/m2/d)
+  R_PCQ_D = R_PCQ_D / (12.01 * 100^2)  # from gC/m2/d to molC/cm2/d
+  R_PCQ_S = R_PCQ_D / (24 * 3600)  # molC/ cm2 / s
   R_PCQ_S_0 = R_PCQ_S / (L * pore) # Quade et al. (2007)
   
   ## CO2 diffusion
@@ -85,6 +85,7 @@ fm = function(vars){
   DIFC = FAP * tort * Dair
   
   ## S(z) 
+  k = L / 2 / log(2) # Respiration characteristic production depth (cm) - Quade (2007)
   S_z_mol = k ^ 2 * R_PCQ_S_0 / DIFC * (1 - exp(-z / k)) # (mol/cm3)
   S_z = S_z_mol * (0.08206 * Tsoil.K * 10^9) # ppmv
   
@@ -101,7 +102,11 @@ fm = function(vars){
   
   # Oxygen isotope ----
   ## Rainfall isotopes
-  R18.p = (d18.p / 1000 + 1) * R18.VSMOW
+  TmOOS = (4 * MAT - TmPCQ) / 3 # out-of-season air temperature
+  d18p_PCQ = -15 + 0.58 * TmPCQ
+  d18p_OOS = -15 + 0.58 * TmOOS
+  d18p = (d18p_PCQ * PCQ.pf + d18p_OOS * (1 - spre) * (1 - PCQ.pf)) / (PCQ.pf + (1 - spre) * (1 - PCQ.pf))
+  R18.p = (d18p / 1000 + 1) * R18.VSMOW
   
   ## Equilibrium fractionation (Horita and Wesolowski 1994)
   alpha18.eq = 1 / exp(((1.137e6 / (Tsoil.K ^ 2) - 0.4156e3/Tsoil.K - 2.0667) /1000))
@@ -110,8 +115,8 @@ fm = function(vars){
   R18.a = R18.p * alpha18.eq
   
   ### Soil evaporation from AET
-  E1 = ETR * AET_PCQ
-  E = max(E1, 1) # minimum of 1 mm
+  E = ETR * AET_PCQ
+  E = pmax(E, 1) # minimum of 1 mm
   E_s = E / (1000 * 90 * 24 * 3600) # soil evaporation rate in m/sec
   
   ### Water vapor diffusivity
@@ -119,8 +124,8 @@ fm = function(vars){
   es = (0.611 * exp(17.502 * Tsoil / (Tsoil + 240.97))) * 1000 # saturated water vapor pressure from Tetens formula
   N.sat = 0.01802 * es / (Rgas * Tsoil.K) # saturated water vapor concentration at a given temperature
   z.bar = N.sat * Dv.soil / (E_s * rho) # penetration depth (m)
-  z.ef1 = (1 - ha) * z.bar # the thickness of the water vapor phase region (m)
-  z.ef = max(z.ef1, 1e-10)
+  z.ef = (1 - ha) * z.bar # the thickness of the water vapor phase region (m)
+  z.ef = pmax(z.ef, 1e-10)
   
   ### Liquid water diffusivity (m2/s) (Easteal 1984)
   Dl = exp(1.6766 + 1.6817 * (1000 / Tsoil.K) - 0.5773 * (1000 / Tsoil.K)^2) * 10^-9 
@@ -132,8 +137,8 @@ fm = function(vars){
   R18.ef = (alpha18.diff * R18.p * (z.ef / z.bar) + ha * R18.a) / (h.ef * alpha18.eq) # isotopic composition at the evaporation front
   
   ### Isotope composition of soil water at depth z
-  hs = min(ha + z_m / z.bar, 1)
-  z.f = (pore / a.theta) * log(z_m / z.ef) # the modified depth function
+  hs = pmin(ha + z_m / z.bar, 1)
+  z.f = (theta_bar / a.theta) * log(z_m / z.ef) # the modified depth function
   R18.s = ifelse(z_m <= z.ef, (alpha18.diff * R18.p * z_m / z.bar + ha * R18.a) / (hs * alpha18.eq),
                  (R18.ef - R18.p) * exp(-z.f / z.hat) + R18.p)
   d18O.s = ((R18.s / R18.VSMOW) - 1) * 1000
@@ -142,9 +147,32 @@ fm = function(vars){
   alpha18_c_w_eq = exp((1.61e4 / Tsoil.K - 24.6) / 1000) # Tremaine (2011)
   R18.c = R18.s * alpha18_c_w_eq
   d18Oc = (R18.c / R18.VPDB - 1) * 1000
+  D47c = 0.0391e6 / Tsoil.K ^ 2 + 0.154 # Andersen (2021)
   
   results = data.frame("d13Cc" = rep(d13Cc), "d18Oc" = rep(d18Oc), 
-                       "T47" = rep(Tsoil),
+                       "D47" = rep(D47c),
                        "d18Os" = rep(d18O.s),
-                       "d13Co" = rep(d13Co))
+                       "d13Co" = rep(d13Co),
+                       "d13Cs" = rep(d13Cs),
+                       "Sz" = rep(S_z),
+                       "d18Op" = rep(d18p),
+                       "z" = rep(z_m),
+                       "ha" = rep(ha),
+                       "z.f" = rep(z.f),
+                       "E_s" = rep(E_s))
+}
+
+sens.plot = function(sens.t, var) {
+  png(paste("figure/sens_test/sens_", var, ".png", sep = ""), 9.87, 2.57, units = "in", res = 300)
+  par(mfrow = c(1, 4))
+  par(mar = c(5,5,1,1))
+  plot(sens.t[[var]], sens.t$d13Cc, type = "l", cex.lab = 1.4, cex.axis = 1.2,
+       xlab = var, ylab = expression(delta^"13"*"C"[c]*" (\u2030)"))
+  plot(sens.t[[var]], sens.t$d18Oc, type = "l", xlab = var, cex.lab = 1.4, cex.axis = 1.2,
+       ylab = expression(delta^"18"*"O"[c]*" (\u2030)"))
+  plot(sens.t[[var]], sens.t$D47, type = "l", xlab = var, cex.lab = 1.4, cex.axis = 1.2,
+       ylab = expression(Delta[47]*" (\u2030)"))
+  plot(sens.t[[var]], sens.t$d13Co, type = "l", xlab = var, cex.lab = 1.4, cex.axis = 1.2,
+       ylab = expression(delta^"13"*"C"[o]*" (\u2030)"))
+  dev.off()
 }

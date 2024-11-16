@@ -12,11 +12,11 @@ pb = function(shp, rt){
   pre = rbeta(1e6, shp, rt)
   plot(density(pre))
 }
-pb(0.45 * 100 / 0.55, 100) 
+pb(0.55 * 500 / 0.45, 500) 
 
 ## For normal distribution
 pn = function(mean, sd){
   pre = rnorm(1e6, mean, sd)
   plot(density(pre))
 }
-pn(0.44, 0.04)
+pn(-8, 3)
