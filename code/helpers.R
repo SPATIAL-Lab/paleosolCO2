@@ -40,14 +40,17 @@ ai = function(){
 }
 
 
-plot.jpi = function(x, y, n = 500, ylim = range(y), ...){
+plot.jpi = function(x, y, n = 500, ylab = deparse(substitute(y)), ylim = range(y), ...){
   # x = timeseries ages, y = simslist matrix
   inds = sample(seq_along(y[, 1]), n)
-  plot(x, y[inds[1],], type = "l", xlab = "Age", ylim = ylim, 
+  plot(x, y[inds[1],], type = "l", xlab = "Age", ylab = ylab, ylim = ylim, 
        col = rgb(0, 0, 0, 0.05), ...)
   for(i in inds[-1]){
     lines(x, y[i,], col = rgb(0, 0, 0, 0.1))
   }
+  
+  m = apply(y, 2, median)
+  lines(x, m, lwd = 3)
 }
 
 get.ind = function(obs, ages){
@@ -69,4 +72,13 @@ tsdens = function(d, base = "black"){
   polygon(c(d[, 1], rev(d[, 1])), c(d[, 3], rev(d[, 5])), 
           col = cols[2], border = NA)
   lines(d[, 1], d[, 4], col = cols[3], lwd = 2)
+}
+
+# Plot gamma prior on precision as sd
+
+plot.pre = function(a, g){
+  pre = rgamma(1e6, a, g)
+  v = 1 / pre
+  sd = sqrt(v)
+  plot(density(sd))
 }
