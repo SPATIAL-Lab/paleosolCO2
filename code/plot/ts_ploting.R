@@ -78,24 +78,52 @@ axis(1)
 mtext("Age (Ma)", 1, line = 2)
 
 dev.off()
-## plot w/ iterations ----
-load("out/ts_zjc_1e5_30ppm_v2.rda")
-dt = 0.1
-ages = seq(-2.6, 0, by = dt)
+## comparison with published records ----
+load("out/ts_fx_1e4_normal.rda")
+ts.fx = post.clp
+load("out/ts_zjc_1e5_normal.rda")
+ts.zjc = post.clp
+load("out/ts_lc_1e4_normal.rda")
+ts.lc = post.clp
+param = "MAP"
+fx.ts = fm.ts("Fuxian", param, ts.fx)
+zjc.ts = fm.ts("Zhaojiachuan", param, ts.zjc)
+lc.ts = fm.ts("Luochuan", param, ts.lc)
+dat = rbind(fx.ts, zjc.ts, lc.ts)
+pco2 = read.csv("data/age_co2_data.csv") 
+pco2 = pco2[, c(3,4,7:9)] 
+names(pco2) = c("proxy", "age", "CO2", "high", "low")
+MAP = read_xlsx("data/EASM_meng2018.xlsx", sheet = 4)
+MAP = MAP %>% drop_na()
+names(MAP) = c("age", "unit", "MIS", "index")
+p1 = ggplot(dat, aes(x = age, y = median, fill = site)) +
+  geom_ribbon(aes(ymin = x25, ymax = x75), alpha = 0.3) +
+  geom_line(aes(color = site)) +
+  scale_fill_manual(values = c("firebrick2", "royalblue", "azure4")) +
+  scale_color_manual(values = c("firebrick2", "royalblue", "azure4")) +
+  theme_bw() + theme +
+  labs(x = "Age (Ma)", y = param) +
+  ggtitle("JPI") + theme(plot.title = element_text(hjust = 0.9)) +
+  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
+p1
+# p2 = ggplot(pco2, aes(x = age/1000, y = CO2, fill = proxy)) +
+#   # geom_errorbar(aes(ymin = low, ymax = high), linewidth = 0.2, width = 0, color = "azure3") +
+#   geom_point(shape = 21, size = 3) +
+#   theme_bw() + theme +
+#   labs(x = "Age (Ma)", y = param) +
+#   ggtitle("inverted") + 
+#   scale_x_continuous(breaks = seq(0, 2.5, 0.5)) + 
+#   scale_y_continuous(limits = c(0, 500))
+p2 = ggplot(MAP, aes(x = age, y = index)) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme +
+  labs(x = "Age (Ma)", y = param) +
+  ggtitle("inverted") + theme(plot.title = element_text(hjust = 0.9)) +
+  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
+p2
 
-plot(ages, post.clp$BUGSoutput$sims.list$pCO2[1,], type="l", axes = FALSE, 
-     xlab = "Age (Ma)", ylab = expression(italic(p)*"CO"[2]), 
-     xlim = range(ages), ylim = range(post.clp$BUGSoutput$sims.list$pCO2), 
-     col=rgb(red=0, green=0, blue=0, alpha=0.1), lwd=0.3)
-for (i in 2:500) {
-  lines(ages, post.clp$BUGSoutput$sims.list$pCO2[i,], col=rgb(red=0, green=0, blue=0, alpha=0.3), lwd=0.3)
-}
-lines(ages, post.clp$BUGSoutput$median$pCO2, col="red", lwd = 5)
-# dat.rs = cbind(dat.age, 100)
-# points(dat.rs[, 1], dat.rs[, 2], pch = 24, cex = 1)
-# points(ages, post.clp$BUGSoutput$median$pCO2, col="red")
-axis(2)
-axis(1)
+ggarrange(p1, p2, nrow = 1, ncol = 2, align = "hv", common.legend = TRUE)
+ggsave("figure/MAP_comparison.jpg", width = 7.7, height = 3.5)
 
 ## plot w/ uncertainties ----
 # load data
@@ -107,15 +135,15 @@ zjc = post.clp
 load("out/ms_lc_1e4.rda")
 lc = post.clp
 # w/ age model
-load("out/ts_fx_1e5.rda")
+load("out/ts_fx_1e5_normal.rda")
 ts.fx = post.clp
-load("out/ts_zjc_1e5.rda")
+load("out/ts_zjc_1e5_normal.rda")
 ts.zjc = post.clp
-load("out/ts_lc_1e5.rda")
+load("out/ts_lc_1e5_normal.rda")
 ts.lc = post.clp
 
 # plot
-param = "Tsoil"
+param = "pCO2"
 fx.ms = fm("Fuxian", param, fx)
 fx.ts = fm.ts("Fuxian", param, ts.fx)
 fx.ms$ts = "No"
@@ -167,10 +195,59 @@ p3
 ggarrange(p1, p2, p3, nrow = 1, ncol = 3, common.legend = TRUE)
 ggsave(paste("figure/ms_ts_", param, ".jpg", sep = ""), width = 9.5, height = 3.4)
 
+## plot w/ and w/o D47 data ----
+load("out/ts_fx_1e4_normal.rda")
+fx = post.clp
+load("out/ts_fx_1e4_D47_normal.rda")
+fx.47 = post.clp
+param = "pCO2"
+fx.ts = fm.ts("Fuxian", param, fx)
+fx.ts$D47 = "no"
+fx.ts.47 = fm.ts("Fuxian", param, fx.47)
+fx.ts.47$D47 = "yes"
+dat = rbind(fx.ts, fx.ts.47)
+p4 = ggplot(dat, aes(x = age, y = median, fill = D47)) +
+  geom_ribbon(aes(ymin = x25, ymax = x75), alpha = 0.3) +
+  geom_line(aes(color = D47)) +
+  scale_fill_manual(values = c("firebrick2", "royalblue")) +
+  scale_color_manual(values = c("firebrick2", "royalblue")) +
+  theme_bw() + theme +
+  labs(x = "Age (Ma)", y = param) +
+  ggtitle("Fuxian") +
+  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
+p4
+
+ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, align = "hv", common.legend = TRUE)
+ggsave("figure/D47.jpg", width = 7.3, height = 5.5)
+## plot the effect of tau ----
+load("out/ts_params_1e4_normal/ts_fx_10ppm.rda")
+small = post.clp
+load("out/ts_params_1e4_normal/ts_fx_50ppm.rda")
+median = post.clp
+load("out/ts_params_1e4_normal/ts_fx_100ppm.rda")
+large = post.clp
+param = "pCO2"
+post.s = fm.ts("Fuxian", param, small) %>% mutate(tau = "10 ppm")
+post.m = fm.ts("Fuxian", param, median) %>% mutate(tau = "50 ppm")
+post.l = fm.ts("Fuxian", param, large) %>% mutate(tau = "100 ppm")
+dat = rbind(post.s, post.m, post.l)
+dat$tau = factor(dat$tau, levels = c("10 ppm", "50 ppm", "100 ppm"))
+ggplot(dat, aes(x = age, y = median, fill = tau)) +
+  geom_ribbon(aes(ymin = x25, ymax = x75), alpha = 0.3) +
+  geom_line(aes(color = tau)) +
+  scale_fill_manual(values = c("firebrick2", "royalblue", "azure4")) +
+  scale_color_manual(values = c("firebrick2", "royalblue", "azure4")) +
+  theme_bw() + theme +
+  ggtitle("Fuxian") + theme(plot.title = element_text(hjust = 0.9)) +
+  labs(x = "Age (Ma)", 
+       y = expression(italic(p)*"CO"[2]*" (ppmv)"), 
+       fill = expression(tau), color = expression(tau)) +
+  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
+
 # plot.jpg ----
 load("out/ts_fx_1e5.rda")
-param = "tsc"
-plot.jpi(ages, post.clp$BUGSoutput$sims.list[[param]], n = 1000)
+param = "pCO2"
+plot.jpi(ages, post.clp$BUGSoutput$sims.list[[param]], n = 1000, ylab = param)
 lines(ages, post.clp$BUGSoutput$median[[param]], col="red", lwd = 5)
 
 

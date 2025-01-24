@@ -99,6 +99,7 @@ model{
     ### d13C of pedogenic carbonate
     d13Cs[i] = (pCO2[i] * d13Ca[i] + S_z[i] * (1.0044 * d13Cr[i] + 4.4))/(S_z[i] + pCO2[i])
     d13Cc[i] = ((1 + (11.98 - 0.12 * Tsoil[i]) / 1000) * (d13Cs[i] + 1000)) - 1000
+    Ratio[i] = pCO2[i] / S_z[i]
     
     ## Oxygen isotopes ----
     ### Rainfall isotopes
@@ -153,6 +154,7 @@ model{
     ## Primary environmental ----
     d13Ca[i] ~ dunif(-8, -5) # Atmospheric d13C, ppt
     pCO2[i] ~ dunif(150, 450) # atmospheric CO2 mixing ratio
+    # pCO2[i] ~ dnorm(300, 1 / 50 ^ 2)T(150, 500)
     MAT[i] ~ dunif(10, 17) # mean annual temperature
     PCQ_to[i] ~ dunif(7, 15)
     MAP[i] ~ dunif(200, 750) # mean annual precipitation, mm

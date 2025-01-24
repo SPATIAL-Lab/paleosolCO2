@@ -6,7 +6,7 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read and groom data ----
-clp = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
+clp = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
 clp = clp[,1:8]
 # clp = read.csv("data/loess_interglacial.csv") %>% filter(age < 2.6)
 # clp = clp[,1:9]
@@ -47,12 +47,12 @@ d = list(ai = ages$ts,
 )
 
 parms = c("pCO2", "MAT", "PCQ_to", "Tsoil", "tsc", "MAP", "PCQ_pf", "PPCQ", "d18p", 
-          "d18O.s", "pore", "z_m", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "AI")
+          "d18O.s", "pore", "z_m", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "AI", "Ratio")
 
 system.time({post.clp = jags.parallel(d, NULL, parms, "code/models/multi_sample_v2.R",
                                       n.iter = 1e4, n.chains = 3, n.burnin = 3e3)})
 
 sum.clp = post.clp$BUGSoutput$summary
-save(post.clp, file = "out/ms_fx_1e4.rda")
+save(post.clp, file = "out/ms_zjc_1e4.rda")
 load("out/ms_zjc_1e4_d18c.rda")
 # traceplot(post.clp, varname = "MAP")

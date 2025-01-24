@@ -123,7 +123,7 @@ fm = function(vars){
   Dv.soil = Dv.air * tort * (pore - 0.05) # effective diffusivity of water vapor in soil (m2/s)
   es = (0.611 * exp(17.502 * Tsoil / (Tsoil + 240.97))) * 1000 # saturated water vapor pressure from Tetens formula
   N.sat = 0.01802 * es / (Rgas * Tsoil.K) # saturated water vapor concentration at a given temperature
-  z.bar = N.sat * Dv.soil / (E_s * rho) # penetration depth (m)
+  z.bar = N.sat * Dv.soil / (E_s * rho) # mean penetration depth (m)
   z.ef = (1 - ha) * z.bar # the thickness of the water vapor phase region (m)
   z.ef = pmax(z.ef, 1e-10)
   

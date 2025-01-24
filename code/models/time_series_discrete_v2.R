@@ -220,13 +220,14 @@ model{
     d13Cr.eps[i] ~ dnorm(d13Cr.eps[i - 1] * (d13Cr.phi ^ dt), d13Cr.pc[i])
     d13Cr.pc[i] = d13Cr.tau * ((1 - d13Cr.phi ^ 2) / (1 - d13Cr.phi ^ (2 * dt)))
     
-    pore[i] = pore[i - 1] + pore.eps[i]
-    pore.eps[i] ~ dnorm(pore.eps[i - 1] * (pore.phi ^ dt), pore.pc[i])
-    pore.pc[i] = pore.tau * ((1 - pore.phi ^ 2) / (1 - pore.phi ^ (2 * dt)))
+    pore[i] ~ dbeta(0.5 * 500 / 0.5, 500)
+    # pore[i] = pore[i - 1] + pore.eps[i]
+    # pore.eps[i] ~ dnorm(pore.eps[i - 1] * (pore.phi ^ dt), pore.pc[i])
+    # pore.pc[i] = pore.tau * ((1 - pore.phi ^ 2) / (1 - pore.phi ^ (2 * dt)))
 }
   
   # Time dependent variables, ts parameters ----
-  pCO2.tau ~ dgamma(10, 10e3) # 10, 10e3
+  pCO2.tau ~ dgamma(10, 1e4) # 10, 1e4
   pCO2.phi ~ dbeta(2, 5)
 
   MAT.tau ~ dgamma(10, 1) # 10, 1
@@ -244,9 +245,6 @@ model{
   tsc.tau ~ dgamma(10, 1e-3)
   tsc.phi ~ dbeta(2, 5)
 
-  # ha.tau ~ dgamma(10, 1e-2)
-  # ha.phi ~ dbeta(2, 5)
-
   f_R.tau ~ dgamma(10, 1e-5)
   f_R.phi ~ dbeta(2, 5)
 
@@ -259,8 +257,8 @@ model{
   ETR.tau ~ dgamma(10, 1e-5)
   ETR.phi ~ dbeta(2, 5)
   
-  pore.tau ~ dgamma(10, 1e-3)
-  pore.phi ~ dbeta(2, 5)
+  # pore.tau ~ dgamma(10, 1e-3)
+  # pore.phi ~ dbeta(2, 5)
 
   ## Primary environmental ----
   d13Ca[1] ~ dunif(-8, -5) # Atmospheric d13C, ppt
@@ -272,13 +270,14 @@ model{
   MAT.eps[1] = 0
   PCQ_to[1] ~ dunif(7, 15) # PCQ temperature offset, C
   PCQ_to.eps[1] = 0
-  MAP[1] ~ dunif(200, 750) # mean annual precipitation, mm
+  MAP[1] ~ dunif(200, 600) # mean annual precipitation, mm
   MAP.eps[1] = 0
-  PCQ_pf[1] ~ dunif(0.26, 0.55) # PCQ precipitation fraction
+  PCQ_pf[1] ~ dnorm(0.5, 1 / 0.2 ^ 2)T(0.3, 0.8) # PCQ precipitation fraction
+  # PCQ_pf[1] ~ dunif(0.26, 0.55) # PCQ precipitation fraction
   PCQ_pf.eps[1] = 0
 
   ## Secondary soil ----
-  tsc[1] ~ dunif(0.34, 0.55) # seasonal offset of PCQ for thermal diffusion
+  tsc[1] ~ dbeta(0.4 * 500 / 0.6, 500) # seasonal offset of PCQ for thermal diffusion
   tsc.eps[1] = 0
   f_R[1] ~ dbeta(0.11 * 500 / 0.89, 500) # ratio of PCQ to mean annual respiration rate
   f_R.eps[1] = 0
@@ -286,14 +285,14 @@ model{
   ETR.eps[1] = 0 
   d13Cr[1] ~ dunif(-30, -20)
   d13Cr.eps[1] = 0
-  pore[1] ~ dunif(0.45, 0.54) # soil porosity
+  pore[1] ~ dbeta(0.5 * 500 / 0.5, 500) # soil porosity
   pore.eps[1] = 0
   
   # Not time dependent ----
   lat = 30 # terrestrial site latitude
   Ra = 42.608 - 0.3538 * abs(lat) # total radiation at the top of the atmosphere
   Rs = Ra * 0.16 * sqrt(12) # daily temperature range assumed to be 12
-  tort ~ dbeta(0.7 * 100 / 0.3, 100) # soil tortuosity
+  tort ~ dbeta(0.7 * 500 / 0.3, 500) # soil tortuosity
   SOM.frac ~ dunif(-0.5, 0.5)
   
   ## Constants ----

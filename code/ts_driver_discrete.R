@@ -7,12 +7,12 @@ source("code/helpers.R")
 ### loess ----
 # Read data
 # Glacial data
-clp = read.csv("data/loess_glacial.csv") %>% filter(age < 2.6) %>% filter(section == "Fuxian")
-clp = clp[,1:8]
+# clp = read.csv("data/loess_glacial.csv") %>% filter(age < 2.6) %>% filter(section == "Zhaojiachuan")
+# clp = clp[,1:8]
 D47 = read.csv("data/data.csv") %>% filter(site == "Fuxian") %>% drop_na(D47)
 # Interglacial data
-# clp = read.csv("data/loess_interglacial.csv") %>% filter(age < 2.6)
-# clp = clp[,1:9]
+clp = read.csv("data/loess_interglacial.csv") %>% filter(age < 2.6)
+clp = clp[,1:9]
 
 md = read.csv("data/d13Ca_tipple.csv") %>% filter(age <= max(clp$age) + 0.1) # Tipple et al. (2010)
 clp$d13a = approx(md$age, md$d13C, xout = clp$age)$y
@@ -48,16 +48,19 @@ d = list(ai = ages, dt = dt,
          d13Cc.obs = d13Cc[, 2:3], d13Cc.ai = d13Cc.ai,
          d18Oc.obs = d18Oc[, 2:3], d18Oc.ai = d18Oc.ai,
          d13Co.obs = d13Co[, 2:3], d13Co.ai = d13Co.ai,
-         # D47c.obs = D47c[, 2:3], D47c.ai = D47c.ai,
+         D47c.obs = D47c[, 2:3], D47c.ai = D47c.ai,
          d13Ca.obs = d13Ca[, 2:3], d13Ca.ai = d13Ca.ai)
 
 parms = c("pCO2", "MAT", "Tsoil", "tsc", "MAP", "PCQ_pf", "d18.p",
           "AET_PCQ", "f_R", "S_z", "R_PCQ_S_0", "DIFC", "L", "pore", "AI")
 
 system.time({post.clp = jags.parallel(d, NULL, parms, "code/models/time_series_discrete_v2.R", 
-                        n.iter = 1e5, n.chains = 3, n.burnin = 3e4)})
+                        n.iter = 1e4, n.chains = 3, n.burnin = 3e3)})
 sum_clp = post.clp$BUGSoutput$summary
+param = "pCO2"
+plot.jpi(ages, post.clp$BUGSoutput$sims.list[[param]], n = 1000, ylab = param)
+lines(ages, post.clp$BUGSoutput$median[[param]], col="red", lwd = 5)
 
-save(post.clp, file = "out/ts_lc_1e5.rda")
-load("out/ts_lc_1e5_30ppm_v2.rda")
+save(post.clp, file = "out/ts_zjc_1e4.rda")
+load("out/ts_fx_1e5D.rda")
 # traceplot(post.clp, varname = "Ratio")
