@@ -23,6 +23,8 @@ clp$d13o.stdev = 0.2
 clp$d13a.stdev = 0.2
 # clp$MS.stdev = 10
 
+plot(clp$age, clp$d13o)
+
 ## Parse data into series
 d13Cc = na.exclude(clp[c("age", "d13c", "d13c.stdev")])
 d18Oc = na.exclude(clp[c("age", "d18c", "d18c.stdev")])

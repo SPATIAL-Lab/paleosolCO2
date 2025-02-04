@@ -44,9 +44,6 @@ model{
     Tsoil.K[i] = Tsoil[i] + 273.15
     
     Tair_PCQ[i] = MAT[i] + PCQ_to[i]  * sin(2 * 3.141593 * tsc[i])
-    Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
-    d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_OOS[i] * (1 - PCQ_pf[i]) + Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
-    PPCQ[i] = MAP[i] * PCQ_pf[i] 
     
     ## Potential Evapotranspiration - Hargreaves and Samani (1982) and Turc (1961)
     h_m[i] = min(0.95, 0.25 + 0.7 * (PPCQ[i] / 900))
@@ -56,8 +53,14 @@ model{
                             0.013 * (Tair_PCQ[i] / (Tair_PCQ[i] + 15)) * (23.885 * Rs + 50))
     PET_PCQ_D[i] = max(PET_PCQ_D.1[i], 0.01)
     PET_PCQ[i] = PET_PCQ_D[i] * 90
+    PET_D.1[i] = ifelse(ha[i] < 0.5, 
+                        0.013 * (MAT[i] / (MAT[i] + 15)) * (23.885 * Rs + 50) * (1 + ((0.5 - ha[i]) / 0.7)),
+                        0.013 * (MAT[i] / (MAT[i] + 15)) * (23.885 * Rs + 50))
+    PET_D[i] = max(PET_D.1[i], 0.01)
+    PET[i] = PET_D[i] * 365
     
     ## AET in mm/quarter from Budyko curve - Pike (1964)
+    PPCQ[i] = MAP[i] * PCQ_pf[i] 
     AET_var[i] ~ dgamma(1 / 0.2 ^ 2, 1 / 0.2 ^ 2) # noise parameter - Gentine (2012)
     AET_PCQ[i] = PPCQ[i] * (1 / (sqrt(1 + (1 / ((PET_PCQ[i] / (PPCQ[i])) * AET_var[i])) ^ 2)))
     # AET_PCQ[i] = PPCQ[i] * (1 / (sqrt(1 + (1 / ((PET_PCQ[i] / (PPCQ[i])))) ^ 2)))
@@ -74,12 +77,10 @@ model{
     ### Soil respiration rate 
     R_PCQ_D_m1[i] = 1.25 * exp(0.05452 * Tair_PCQ[i]) * PPCQ[i] / (127.77 + PPCQ[i])
     R_PCQ_D[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
-    # R_PCQ_D_m1[i] = 1.25 * exp(0.07987 * MAT[i]) * MAP[i] / (29.86 + MAP[i])
-    # R_PCQ_D_m[i] = R_PCQ_D_m1[i] * f_R[i] # (gC/m2/d)
-    # R_beta[i] = R_PCQ_D_m[i] / (R_PCQ_D_m[i] * 0.5) ^ 2
-    # R_alpha[i] = R_PCQ_D_m[i] * R_beta[i]
-    # R_PCQ_D[i] ~ dgamma(R_alpha[i], R_beta[i])
-    
+    R_gamma[i] = R_PCQ_D_m[i] / (R_PCQ_D_m[i] * 0.15) ^ 2
+    R_alpha[i] = R_PCQ_D_m[i] * R_gamma[i]
+    R_PCQ_D[i] ~ dgamma(R_alpha[i], R_gamma[i])
+
     ### Convert to molC/cm3/s
     R_PCQ_D.1[i] = R_PCQ_D[i] / (12.01 * 100 ^ 2)  # from gC/m2/d to molC/cm2/d
     R_PCQ_S[i] = R_PCQ_D.1[i] / (24 * 3600)  # molC/ cm2 / s
@@ -108,6 +109,8 @@ model{
     
     ## Oxygen isotopes ----
     ### Rainfall isotopes
+    Tair_OOS[i] = (4 * MAT[i] - Tair_PCQ[i]) / 3
+    d18.p[i] ~ dnorm(-15 + 0.58 * (Tair_OOS[i] * (1 - PCQ_pf[i]) + Tair_PCQ[i] * PCQ_pf[i]), 1 / 1 ^ 2) # Precipitation d18O, ppt
     R18.p[i] = (d18.p[i] / 1000 + 1) * R18.VSMOW
     
     ### Equilibrium fractionation (Horita and Wesolowski 1994)
@@ -216,14 +219,15 @@ model{
     ETR.pc[i] = ETR.tau * ((1 - ETR.phi ^ 2) / (1 - ETR.phi ^ (2 * dt)))
     
     # d13Cr[i] ~ dunif(-27, -22)
-    d13Cr[i] = d13Cr[i - 1] + d13Cr.eps[i]
-    d13Cr.eps[i] ~ dnorm(d13Cr.eps[i - 1] * (d13Cr.phi ^ dt), d13Cr.pc[i])
-    d13Cr.pc[i] = d13Cr.tau * ((1 - d13Cr.phi ^ 2) / (1 - d13Cr.phi ^ (2 * dt)))
+    d13Cr[i] = d13Ca[i] + D13Cr[i]
+    D13Cr[i] = D13Cr[i - 1] + D13Cr.eps[i]
+    D13Cr.eps[i] ~ dnorm(D13Cr.eps[i - 1] * (D13Cr.phi ^ dt), D13Cr.pc[i])
+    D13Cr.pc[i] = D13Cr.tau * ((1 - D13Cr.phi ^ 2) / (1 - D13Cr.phi ^ (2 * dt)))
     
-    pore[i] ~ dbeta(0.5 * 500 / 0.5, 500)
-    # pore[i] = pore[i - 1] + pore.eps[i]
-    # pore.eps[i] ~ dnorm(pore.eps[i - 1] * (pore.phi ^ dt), pore.pc[i])
-    # pore.pc[i] = pore.tau * ((1 - pore.phi ^ 2) / (1 - pore.phi ^ (2 * dt)))
+    # pore[i] ~ dbeta(0.5 * 500 / 0.5, 500)
+    pore[i] = pore[i - 1] + pore.eps[i]
+    pore.eps[i] ~ dnorm(pore.eps[i - 1] * (pore.phi ^ dt), pore.pc[i])
+    pore.pc[i] = pore.tau * ((1 - pore.phi ^ 2) / (1 - pore.phi ^ (2 * dt)))
 }
   
   # Time dependent variables, ts parameters ----
@@ -251,9 +255,9 @@ model{
   d13Ca.tau ~ dgamma(10, 1e-1)
   d13Ca.phi ~ dbeta(5, 2)
 
-  d13Cr.tau ~ dgamma(10, 10)
-  d13Cr.phi ~ dbeta(5, 2)
-
+  D13Cr.tau ~ dgamma(10, 10)
+  D13Cr.phi ~ dbeta(5, 2)
+  
   ETR.tau ~ dgamma(10, 1e-5)
   ETR.phi ~ dbeta(2, 5)
   
