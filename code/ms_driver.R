@@ -1,7 +1,4 @@
-library(R2jags)
-library(tidyverse)
-library(readxl)
-library(ggpubr)
+pacman::p_load(rjags, R2jags, tidyverse, readxl)
 source("code/constructors.R")
 source("code/helpers.R")
 
