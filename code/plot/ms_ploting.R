@@ -1,12 +1,177 @@
-library(tidyverse)
-library(ggpubr)
-library(readxl)
+rm(list = ls())
+pacman::p_load(tidyverse, ggpubr, readxl)
 source("code/constructors.R")
-theme = theme(panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),
-              axis.text = element_text(size = 10),
-              plot.title = element_text(hjust = 0.1, vjust = -10))
-# function to create data frame used to plot parameter curves
+theme = theme(panel.grid = element_blank(),
+              axis.text = element_text(size = 10, color = "black"),
+              plot.title = element_text(vjust = -10, hjust = .1),
+              plot.margin = margin(2, 2, 2, 2))
+parms = c("pCO2", "MAT", "PCQ_to", "tsc", "MAP", "PCQ_pf", "f_R", "spre")
+prior_range = read_xlsx("data/input_params_range.xlsx")[, c(1, 4, 6, 7)]
+cat("\014")
+
+# prior vs posterior distributions ----
+load("out/ms_fuxian_1e5.rda")
+post = post.ms
+load("out/ms_fuxian_D47_1e5.rda")
+post_47 = post.ms
+load("out/ms_fuxian_D47_MS_1e5.rda")
+post_47_ms = post.ms
+load("out/ms_fuxian_D47_MS_ECS_1e5.rda")
+post_47_ms_ecs = post.ms
+
+prior_post = function(index, parms){
+  plot_list = list()
+  for (i in 1:length(parms)) {
+    name = parms[i]
+    prior_info = prior_range |>
+      filter(variable == name)
+    if (prior_info$distribution_type == "uniform") {
+      prior = data.frame(type = "prior", value = runif(1e6, prior_info$value1, prior_info$value2))
+    } else {
+      prior = data.frame(type = "prior", value = rbeta(1e6, prior_info$value1, prior_info$value2))
+    }
+    post_pdf = data.frame(type = "post", value = post$BUGSoutput$sims.list[[name]][, index])
+    post_47_pdf = data.frame(type = "post_47", value = post_47$BUGSoutput$sims.list[[name]][, index])
+    post_47_ms_pdf = data.frame(type = "post_47_ms", value = post_47_ms$BUGSoutput$sims.list[[name]][, index])
+    post_47_ms_ecs_pdf = data.frame(type = "post_47_ms_ecs", value = post_47_ms_ecs$BUGSoutput$sims.list[[name]][, index])
+    composite = rbind(prior, post_pdf, post_47_pdf, post_47_ms_pdf, post_47_ms_ecs_pdf)
+    composite$type = factor(composite$type, levels = c("prior", "post", "post_47", "post_47_ms", "post_47_ms_ecs"))
+    ext = diff(range(composite$value))
+    p = ggplot(data = composite) +
+      geom_density(aes(x = value, group = type, fill = type), alpha = .5) +
+      scale_fill_viridis_d(option = "mako") +
+      scale_x_continuous(limits = c(floor((min(composite$value) - ext / 10) * 10) / 10, 
+                                    ceiling((max(composite$value) + ext / 10) * 10) / 10)) +
+      theme_bw() + theme +
+      labs(x = name)
+    plot_list[[i]] = p
+  }
+  ggarrange(plotlist = plot_list, nrow = 3, ncol = 3, 
+            align = "hv", common.legend = TRUE, legend = "right")
+}
+prior_post(50, parms) 
+ggsave("figure/prior_post_pdf.png", width = 8.3, height = 7.3, dpi = 500)
+
+#### time series ----
+post = read_csv("out/ms_fuxian_1e5.csv")
+post_47 = read_csv("out/ms_fuxian_D47_1e5.csv")
+post_47_ms = read_csv("out/ms_fuxian_D47_MS_1e5.csv")
+post_47_ms_ecs = read_csv("out/ms_fuxian_D47_MS_ECS_1e5.csv")
+
+# post vs post_47 ----
+post1 = data.frame(post[, c(2:11)], type = "post")
+post2 = data.frame(post_47[, c(2:11)], type = "post_47")
+composite = rbind(post1, post2)
+p1 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
+                  ymax = pCO2 + pCO2_sd), alpha = .2) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme +
+  guides(fill = "none") +
+  scale_y_continuous(limits = c(150, 600)) +
+  labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
+
+p2 = ggplot(composite, aes(x = age, y = MAT, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = MAT - MAT_sd,
+                  ymax = MAT + MAT_sd), alpha = .2) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme + 
+  guides(fill = "none") +
+  scale_y_continuous(limits = c(4, 17)) +
+  labs(fill = "", x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
+
+p3 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = PCQ_to - PCQ_to_sd,
+                  ymax = PCQ_to + PCQ_to_sd), alpha = .2, show.legend = FALSE) +
+  geom_point(shape = 21, size = 3) +
+  scale_fill_discrete(labels = c(expression("w/o "*Delta[47]), expression("w "*Delta[47]))) +
+  theme_bw() + theme +
+  theme(legend.position = c(.8, .2),
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA)) +
+  scale_y_continuous(limits = c(7, 15)) +
+  labs(fill = "", x = "Age (Ma)", y = expression(paste(Delta*"T (", degree, "C)")))
+
+ggarrange(p1, p2, p3, nrow = 3, ncol = 1, align = "hv")
+ggsave("figure/time_series_D47.png", width = 4, height = 7, dpi = 500)
+
+# post_47 vs post_47_MS ----
+post1 = data.frame(post_47, type = "post_47")
+post2 = data.frame(post_47_ms, type = "post_47_MS")
+composite = rbind(post1, post2)
+p1 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
+                  ymax = pCO2 + pCO2_sd), alpha = .2) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme +
+  guides(fill = "none") +
+  scale_y_continuous(limits = c(150, 600)) +
+  labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
+
+p2 = ggplot(composite, aes(x = age, y = MAP, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = MAP - MAP_sd,
+                  ymax = MAP + MAP_sd), alpha = .2) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme + 
+  guides(fill = "none") +
+  scale_y_continuous(limits = c(1e2, 1e3)) +
+  labs(fill = "", x = "Age (Ma)", y = "MAP (mm)")
+
+p3 = ggplot(composite, aes(x = age, y = PCQ_pf, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = PCQ_pf - PCQ_pf_sd,
+                  ymax = PCQ_pf + PCQ_pf_sd), alpha = .2, show.legend = FALSE) +
+  geom_point(shape = 21, size = 3) +
+  scale_fill_discrete(labels = c("w/o MS", "w MS")) +
+  theme_bw() + theme +
+  theme(legend.position = c(.8, .8),
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA)) +
+  scale_y_continuous(limits = c(.3, 1)) +
+  labs(fill = "", x = "Age (Ma)", y = expression("P"[PCQ]))
+
+ggarrange(p1, p2, p3, nrow = 3, ncol = 1, align = "hv")
+ggsave("figure/time_series_MS.png", width = 4, height = 7, dpi = 500)
+
+
+# post_47_MS vs post_47_MS_ECS ----
+post1 = data.frame(post_47_ms, type = "post_47_MS")
+post2 = data.frame(post_47_ms_ecs[1:32], type = "post_47_MS_ECS")
+composite = rbind(post1, post2)
+p1 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
+                  ymax = pCO2 + pCO2_sd), alpha = .2) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme +
+  guides(fill = "none") +
+  scale_y_continuous(limits = c(100, 600)) +
+  labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
+
+p2 = ggplot(composite, aes(x = age, y = MAT, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = MAT - MAT_sd,
+                  ymax = MAT + MAT_sd), alpha = .2) +
+  geom_point(shape = 21, size = 3) +
+  theme_bw() + theme + 
+  guides(fill = "none") +
+  scale_y_continuous(limits = c(4, 25)) +
+  labs(fill = "", x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
+
+p3 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
+  geom_ribbon(aes(ymin = PCQ_to - PCQ_to_sd,
+                  ymax = PCQ_to + PCQ_to_sd), alpha = .2, show.legend = FALSE) +
+  geom_point(shape = 21, size = 3) +
+  scale_fill_discrete(labels = c("w/o ECS", "w ECS")) +
+  theme_bw() + theme +
+  theme(legend.position = c(.8, .2),
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA)) +
+  scale_y_continuous(limits = c(7, 15)) +
+  labs(fill = "", x = "Age (Ma)", y = expression(paste(Delta*"T (", degree, "C)")))
+
+ggarrange(p1, p2, p3, nrow = 3, ncol = 1, align = "hv")
+ggsave("figure/time_series_ECS.png", width = 4, height = 7, dpi = 500)
+
+
+# function to create data frame used to plot parameter curves ----
 fm = function(site, var, param) {
   if(site == "Luochuan") {
     age = read.csv("data/loess_interglacial.csv")
@@ -21,243 +186,4 @@ fm = function(site, var, param) {
   results = post.var
 }
 
-# input params constraints ----
-load("out/ms_fx_1e4.rda")
-base = post.clp
-load("out/ms_params_constraint/ms_fx_pCO2_1e4.rda")
-test = post.clp
-param = "MAP"
-dat.base = fm("Fuxian", param, base)
-dat.test = fm("Fuxian", param, test)
-ggplot(dat.base, aes(x = age, y = median)) +
-  geom_ribbon(aes(ymin = x25, ymax = x75), fill = "salmon", alpha = 0.3) +
-  geom_ribbon(data = dat.test, aes(x = age, y = median, ymin = x25, ymax = x75), fill = "royalblue1", alpha = 0.3) +
-  geom_point(color = "firebrick2", shape = 21, size = 3) +
-  geom_point(data = dat.test, aes(x = age, y = median), color = "royalblue", shape = 21, size = 3) +
-  theme_bw() + theme +
-  ggtitle(param) + 
-  theme(plot.title = element_text(hjust = 0.9)) +
-  labs(x = "Age (Ma)", 
-       # y = expression(italic(p)*"CO"[2]*" (ppm)")
-       y = "MAP (mm)"
-       # y = expression(paste("T"[soil]*" (", degree, "C)"))
-       ) +
-  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
-ggsave(paste("figure/prior_constraints_ms/CO2_", param,".jpg", sep = ""), width = 4.9, height = 3.5)
-
-# inverted vs bayes w/o age model ----
-# glacial data
-inv = read_xlsx("data/Dataset S1.xlsx", sheet = 2)
-inv = inv[1:141, c(1, 3, 11:13)]
-names(inv) = c("section", "age", "co2", "low", "high")
-inv$age = inv$age / 1000
-zjc.inv = inv %>% filter(section == "Zhaojiachuan")
-fx.inv = inv %>% filter(section == "Fuxian")
-
-load("out/ms_fx_1e4.rda")
-fx = post.clp
-fx.ms = fm("Fuxian", "pCO2", fx)
-p1 = ggplot(fx.ms, aes(x = age, y = median)) +
-  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "salmon", alpha = 0.3) +
-  geom_ribbon(data = fx.inv, aes(x = age, y = co2,
-                                  ymin = co2 - low, ymax = co2 + high), fill = "royalblue1", alpha = 0.3) +
-  geom_line(color = "firebrick2") +
-  geom_line(data = fx.inv, aes(x = age, y = co2), color = "royalblue") +
-  theme_bw() + theme +
-  ggtitle("Fuxian") +
-  labs(x = "Age (Ma)", y = expression(italic(p)*"CO"[2]*" (ppm)")) +
-  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
-p1
-
-load("out/ms_zjc_1e4.rda")
-zjc = post.clp
-zjc.ms = fm("Zhaojiachuan", "pCO2", zjc)
-p2 = ggplot(zjc.ms, aes(x = age, y = median)) +
-  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "salmon", alpha = 0.3) +
-  geom_ribbon(data = zjc.inv, aes(x = age, y = co2,
-                                  ymin = co2 - low, ymax = co2 + high), fill = "royalblue1", alpha = 0.3) +
-  geom_line(color = "firebrick2") +
-  geom_line(data = zjc.inv, aes(x = age, y = co2), color = "royalblue") +
-  theme_bw() + theme +
-  ggtitle("Zhaojiachuan") +
-  labs(x = "Age (Ma)", y = expression(italic(p)*"CO"[2]*" (ppm)")) +
-  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
-p2
-
-inv = read_xlsx("data/lc_inv.xlsx", sheet = 2)
-inv = inv[, c("age", "CO2", "CO2.low", "CO2.high")]
-load("out/ms_lc_1e4.rda")
-lc = post.clp
-lc.ms = fm("Luochuan", "pCO2", lc)
-p3 = ggplot(lc.ms, aes(x = age, y = median)) +
-  geom_ribbon(aes(ymin = x5, ymax = x95), fill = "salmon", alpha = 0.3) +
-  geom_ribbon(data = inv, aes(x = age, y = CO2,
-                                 ymin = CO2 - CO2.low, ymax = CO2 + CO2.high), fill = "royalblue1", alpha = 0.3) +
-  geom_line(color = "firebrick2") +
-  geom_line(data = inv, aes(x = age, y = CO2), color = "royalblue") +
-  theme_bw() + theme +
-  ggtitle("Luochuan") +
-  labs(x = "Age (Ma)", y = expression(italic(p)*"CO"[2]*" (ppm)")) +
-  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
-p3
-ggarrange(p1, p2, p3, nrow = 1, ncol = 3, align = "hv")
-ggsave("figure/ms_inv_comparison.jpg", width = 12, height = 3.5)
-
-# d18c model ----
-load("out/ms_zjc_1e4.rda")
-zjc = post.clp
-zjc.ms = fm("Zhaojiachuan", "S_z", zjc)
-zjc.d18 = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
-zjc.sz = data.frame(cbind("Zhaojiachuan", zjc.d18$d18c, zjc.ms$median, zjc.ms$x25, zjc.ms$x75))
-load("out/ms_fx_1e4.rda")
-fx = post.clp
-fx.ms = fm("Fuxian", "S_z", fx)
-fx.d18 = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-fx.sz = data.frame(cbind("Fuxian", fx.d18$d18c, fx.ms$median, fx.ms$x25, fx.ms$x75))
-dat = rbind(zjc.sz, fx.sz)
-names(dat) = c("site", "d18c", "Sz", "Sz.low", "Sz.high")
-dat[2:5] = lapply(dat[, 2:5], as.numeric)
-m1 = nls(data = dat, Sz ~ a*exp(-b*d18c), start = list(a = 30, b = 0.3))
-dat$Sz_pred = predict(m1, newdata = dat)
-p1 = ggplot(dat, aes(x = d18c, y = Sz)) +
-  geom_errorbar(aes(ymin = Sz.low, ymax = Sz.high), size = 0.2, width = 0, color = "ivory3") +
-  geom_point(aes(fill = site), size = 3, shape = 21) +
-  scale_fill_brewer(palette = "Paired") +
-  geom_line(aes(x = d18c, y = Sz_pred), linetype = "dashed", linewidth = 1) +
-  theme_bw() + theme +
-  labs(x = expression(delta^"18"*"O"[c]*" (\u2030)"),
-       y = expression("S"[(z)]*" (ppm)"), fill = "") +
-  scale_y_continuous(limits = c(200, 1100))
-p1
-# inverse model
-inv = read_xlsx("data/Dataset S1.xlsx")
-inv = inv[1:40, c(1,6,11,12)]
-names(inv) = c("site", "d18c", "Sz", "Sz.sd")
-m2 = nls(data = inv, Sz ~ a*exp(-b*d18c), start = list(a = 30, b = 0.3))
-inv$Sz_pred = predict(m2, newdata = inv)
-p2 = ggplot(inv, aes(x = d18c, y = Sz)) +
-  geom_errorbar(aes(ymin = Sz - Sz.sd, ymax = Sz + Sz.sd), size = 0.2, width = 0, color = "ivory3") +
-  geom_point(aes(fill = site), size = 3, shape = 21) +
-  scale_fill_brewer(palette = "Paired") +
-  geom_line(aes(x = d18c, y = Sz_pred), linetype = "dashed", linewidth = 1) +
-  theme_bw() + theme +
-  labs(x = expression(delta^"18"*"O"[c]*" (\u2030)"),
-       y = expression("S"[(z)]*" (ppm)"), fill = "") +
-  scale_y_continuous(limits = c(200, 1100))
-p2
-ggarrange(p2, p1, nrow = 1, ncol = 2, align = "hv", common.legend = TRUE)
-ggsave("figure/d18c_Sz_model.jpeg", width = 5.1, height = 3.1)
-
-# fixed z (20cm)
-load("out/ms_fx_1e4_20cm.rda")
-fx = post.clp
-fx.ms = fm("Fuxian", "S_z", fx)
-fx.d18 = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-fx.sz = data.frame(cbind("Fuxian", fx.d18$d18c, fx.ms$median, fx.ms$x25, fx.ms$x75))
-load("out/ms_zjc_1e4_20cm.rda")
-zjc = post.clp
-zjc.ms = fm("Zhaojiachuan", "S_z", zjc)
-zjc.d18 = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
-zjc.sz = data.frame(cbind("Zhaojiachuan", zjc.d18$d18c, zjc.ms$median, zjc.ms$x25, zjc.ms$x75))
-dat = rbind(fx.sz, zjc.sz)
-names(zjc.sz) = c("site", "d18c", "Sz", "Sz.low", "Sz.high")
-dat[,2:5] = lapply(dat[,2:5], as.numeric)
-m3 = nls(data = dat, Sz ~ a*exp(-b*d18c), start = list(a = 30, b = 0.3))
-dat$Sz_pred = predict(m3, newdata = dat)
-p3 = ggplot(dat, aes(x = d18c, y = Sz)) +
-  geom_errorbar(aes(ymin = Sz.low, ymax = Sz.high), size = 0.2, width = 0, color = "ivory3") +
-  geom_point(aes(fill = site), size = 3, shape = 21) +
-  scale_fill_brewer(palette = "Paired") +
-  geom_line(aes(x = d18c, y = Sz_pred), linetype = "dashed", linewidth = 1) +
-  theme_bw() + theme +
-  labs(x = expression(delta^"18"*"O"[c]*" (\u2030)"),
-       y = expression("S"[(z)]*" (ppm)"), fill = "") +
-  scale_y_continuous(limits = c(200, 1100))
-p3
-
-# other parameters ----
-load("out/ms_zjc_1e4.rda")
-zjc = post.clp
-load("out/ms_fx_1e4.rda")
-fx = post.clp
-load("out/ms_lc_1e4.rda")
-lc = post.clp
-param = "S_z"
-fx.ms = fm("Fuxian", param, fx)
-zjc.ms = fm("Zhaojiachuan", param, zjc)
-lc.ms = fm("Luochuan", param, lc)
-dat = rbind(fx.ms, zjc.ms, lc.ms)
-names(dat) = c("site", "age", "x5", "x25", "median", "x75", "x95")
-dat[,2:7] = lapply(dat[,2:7], as.numeric)
-
-ggplot(dat, aes(x = age, y = median)) +
-  geom_ribbon(aes(fill = site, ymin = x5, ymax = x95), alpha = 0.3) +
-  geom_line(aes(color = site)) +
-  geom_point(aes(color = site), shape = 21, fill = "white", size = 2) +
-  scale_fill_manual(values = c("firebrick2", "royalblue", "gray")) +
-  scale_color_manual(values = c("firebrick2", "royalblue", "black")) +
-  theme_bw() + theme +
-  ggtitle(param) +
-  labs(x = "Age (Ma)", y = param) +
-  scale_x_continuous(breaks = seq(0, 2.5, 0.5))
-ggsave(paste("figure/ms_", param, ".jpg", sep = ""), width = 5.8, height = 3.1)
-
-## Fuxian + D47 ----
-load("out/ms_fx_1e4_v2.rda")
-fx = post.clp
-fx.age = read.csv("data/loess_glacial.csv") %>% filter(section == "Fuxian")
-fx.age = fx.age[order(fx.age$age),]
-load("out/ms_fx_1e4_D47.v2.rda")
-fx47 = post.clp
-fx47.age = read.csv("data/D47.csv")
-
-fx1 = data.frame(cbind("no", fx.age$age, 
-                          t(apply(fx$BUGSoutput$sims.list$MAP, 2, quantile, 
-                                  c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(fx1) = c("D47", "age", "x5", "x25", "median", "x75", "x95")
-fx2 = data.frame(cbind("yes", fx47.age$age, 
-                           t(apply(fx47$BUGSoutput$sims.list$MAP, 2, quantile, 
-                                   c(0.05, 0.25, 0.5, 0.75, 0.95)))))
-names(fx2) = c("D47", "age", "x5", "x25", "median", "x75", "x95")
-params = rbind(fx1, fx2)
-params[,2:7] = lapply(params[,2:7], as.numeric)
-
-ggplot(params, aes(x = age, y = median, fill = D47)) +
-  geom_ribbon(aes(ymin = x5, ymax = x95), alpha = 0.3) +
-  geom_line(aes(color = D47)) +
-  geom_point(aes(color = D47), shape = 21, size = 3, fill = "white") +
-  scale_fill_manual(values = c("firebrick2", "royalblue")) +
-  scale_color_manual(values = c("firebrick2", "royalblue")) +
-  theme_bw() + theme +
-  # ggtitle("Zhaojiachuan") +
-  labs(x = "Age (Ma)",
-       fill = expression(Delta[47]),
-       color = expression(Delta[47]),
-       # y = expression(italic(p)*"CO"[2]*" (ppm)")
-       # y = expression(paste("T"[soil]*" (", degree, "C)"))
-       # y = expression("S"[z]*" (ppmv)")
-       y = expression("R (molC/cm"^"2"*"/s)")
-       ) +
-  scale_x_continuous(breaks = seq(0, 2.5, 0.5)) +
-  scale_y_continuous()
-
-# iteration ----
-source("code/constructors.R")
-source("code/helpers.R")
-load("out/ms_fx_1e4_v2.rda")
-
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$pCO2, n = 100)
-lines(ai, post.clp$BUGSoutput$median$pCO2, col="red", lwd = 5)
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$S_z, n = 100, ylim = c(0, 3000))
-lines(ai, post.clp$BUGSoutput$median$S_z, col="red", lwd = 5)
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$Tsoil, n = 100)
-lines(ai, post.clp$BUGSoutput$median$Tsoil, col="red", lwd = 5)
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$L, n = 100)
-lines(ai, post.clp$BUGSoutput$median$L, col="red", lwd = 5)
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$MAP, n = 100)
-lines(ai, post.clp$BUGSoutput$median$MAP, col="red", lwd = 5)
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$d18p, n = 100)
-lines(ai, post.clp$BUGSoutput$median$d18p, col="red", lwd = 5)
-plot.jpi(ai, post.clp$BUGSoutput$sims.list$pore, n = 100)
-lines(ai, post.clp$BUGSoutput$median$pore, col="red", lwd = 5)
 

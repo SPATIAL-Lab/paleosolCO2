@@ -15,6 +15,7 @@ names(ice_forcing) = c("age", "ice_forcing")
 ice_forcing = ice_forcing |>
   mutate(across(everything(), as.numeric)) |>
   filter(age <= 2.58)
+write.csv(ice_forcing, file = "data/global_data/ice_forcing.csv")
 
 ice_co2 = read_xls("data/global_data/ice_core_bereiter_2015.xls", sheet = 3)
 ice_co2 = ice_co2[15:nrow(ice_co2), 1:2]
@@ -97,6 +98,7 @@ ECS = data.frame(age = seq(0, 2.6, .1))
 ECS_sum = data.frame(matrix(nrow = (nrow(ECS) - 1),
                             ncol = 5))
 names(ECS_sum) = c("time", "R_sf", "R_sf_sd", "gmst", "gmst_sd")
+co2_composite = rbind(ice_co2, boron_co2[, 1:2])
 for (i in 1:(nrow(ECS)-1)) {
   age_min = ECS$age[i]
   age_max = ECS$age[i+1]

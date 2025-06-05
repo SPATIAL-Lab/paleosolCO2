@@ -3,7 +3,7 @@ ctrl = function(){
     pCO2 = 300,
     MAT = 15,
     MAP = 500,
-    PCQ.pf = 0.25,
+    PCQ_pf = 0.25,
     PCQ_to = 10,
     tsc = 0.3,
     lat = 35,
@@ -13,8 +13,8 @@ ctrl = function(){
     spre = 0.55,
     ETR = 0.06,
     d13Ca = -8,
-    theta_bar = 0.065 # mean water content [0.05, 0.5]
-    # ,d13Cr = -25
+    theta_bar = 0.065, # mean water content [0.05, 0.5]
+    d13Cr = -25
   )
 }
 
@@ -34,7 +34,7 @@ fm = function(vars){
   Dv.air = 2.44E-05 # water vapor diffusivity in air (m2/s) (Merlivat, 1978)
   
   # Derived values ----
-  PPCQ = MAP * PCQ.pf 
+  PPCQ = MAP * PCQ_pf 
   TmPCQ = MAT + PCQ_to # air temperature of pedogenic carbonate quarter
   Ra = 42.608 - 0.3538 * abs(lat) # total radiation at the top of the atmosphere
   Rs = Ra * 0.16 * sqrt(12) # daily temperature range assumed to be 12
@@ -90,9 +90,9 @@ fm = function(vars){
   S_z = S_z_mol * (0.08206 * Tsoil.K * 10^9) # ppmv
   
   ## estimate the d13Cr of soil-respired CO2
-  DD13_water = 25.09 - 1.2 * (MAP + 975) / (27.2 + 0.04 * (MAP + 975))
-  D13C_plant = (28.26 * 0.22 * (pCO2 + 23.9)) / (28.26 + 0.22 * (pCO2 + 23.9)) - DD13_water # schubert & Jahren (2015)
-  d13Cr = d13Ca - D13C_plant
+  # DD13_water = 25.09 - 1.2 * (MAP + 975) / (27.2 + 0.04 * (MAP + 975))
+  # D13C_plant = (28.26 * 0.22 * (pCO2 + 23.9)) / (28.26 + 0.22 * (pCO2 + 23.9)) - DD13_water # schubert & Jahren (2015)
+  # d13Cr = d13Ca - D13C_plant
   SOM.frac = 0
   d13Co = d13Cr + 1 + SOM.frac 
   
@@ -103,16 +103,14 @@ fm = function(vars){
   # Oxygen isotope ----
   ## Rainfall isotopes
   TmOOS = (4 * MAT - TmPCQ) / 3 # out-of-season air temperature
-  d18p_PCQ = -15 + 0.58 * TmPCQ
-  d18p_OOS = -15 + 0.58 * TmOOS
-  d18p = (d18p_PCQ * PCQ.pf + d18p_OOS * (1 - spre) * (1 - PCQ.pf)) / (PCQ.pf + (1 - spre) * (1 - PCQ.pf))
-  R18.p = (d18p / 1000 + 1) * R18.VSMOW
+  d18p = -15 + 0.58 * (TmOOS * (1 - PCQ_pf) * (1 - spre) + TmPCQ * PCQ_pf)
+  R18p = (d18p / 1000 + 1) * R18.VSMOW
   
   ## Equilibrium fractionation (Horita and Wesolowski 1994)
   alpha18.eq = 1 / exp(((1.137e6 / (Tsoil.K ^ 2) - 0.4156e3/Tsoil.K - 2.0667) /1000))
   
   ### Atmospheric water vapor isotopes
-  R18.a = R18.p * alpha18.eq
+  R18.a = R18p * alpha18.eq
   
   ### Soil evaporation from AET
   E = ETR * AET_PCQ
@@ -134,14 +132,14 @@ fm = function(vars){
   
   ### The evaporation front
   h.ef = ha + z.ef / z.bar # humidity at the evaporation front
-  R18.ef = (alpha18.diff * R18.p * (z.ef / z.bar) + ha * R18.a) / (h.ef * alpha18.eq) # isotopic composition at the evaporation front
+  R18.ef = (alpha18.diff * R18p * (z.ef / z.bar) + ha * R18.a) / (h.ef * alpha18.eq) # isotopic composition at the evaporation front
   
   ### Isotope composition of soil water at depth z
   hs = pmin(ha + z_m / z.bar, 1)
   z.f = (theta_bar / a.theta) * log(z_m / z.ef) # the modified depth function
-  R18.s = ifelse(z_m <= z.ef, (alpha18.diff * R18.p * z_m / z.bar + ha * R18.a) / (hs * alpha18.eq),
-                 (R18.ef - R18.p) * exp(-z.f / z.hat) + R18.p)
-  d18O.s = ((R18.s / R18.VSMOW) - 1) * 1000
+  R18.s = ifelse(z_m <= z.ef, (alpha18.diff * R18p * z_m / z.bar + ha * R18.a) / (hs * alpha18.eq),
+                 (R18.ef - R18p) * exp(-z.f / z.hat) + R18p)
+  d18s = ((R18.s / R18.VSMOW) - 1) * 1000
   
   ### Isotope composition of soil carbonate
   alpha18_c_w_eq = exp((1.61e4 / Tsoil.K - 24.6) / 1000) # Tremaine (2011)
@@ -151,7 +149,7 @@ fm = function(vars){
   
   results = data.frame("d13Cc" = rep(d13Cc), "d18Oc" = rep(d18Oc), 
                        "D47" = rep(D47c),
-                       "d18Os" = rep(d18O.s),
+                       "d18Os" = rep(d18s),
                        "d13Co" = rep(d13Co),
                        "d13Cs" = rep(d13Cs),
                        "Sz" = rep(S_z),
@@ -160,19 +158,4 @@ fm = function(vars){
                        "ha" = rep(ha),
                        "z.f" = rep(z.f),
                        "E_s" = rep(E_s))
-}
-
-sens.plot = function(sens.t, var) {
-  png(paste("figure/sens_test/sens_", var, ".png", sep = ""), 9.87, 2.57, units = "in", res = 300)
-  par(mfrow = c(1, 4))
-  par(mar = c(5,5,1,1))
-  plot(sens.t[[var]], sens.t$d13Cc, type = "l", cex.lab = 1.4, cex.axis = 1.2,
-       xlab = var, ylab = expression(delta^"13"*"C"[c]*" (\u2030)"))
-  plot(sens.t[[var]], sens.t$d18Oc, type = "l", xlab = var, cex.lab = 1.4, cex.axis = 1.2,
-       ylab = expression(delta^"18"*"O"[c]*" (\u2030)"))
-  plot(sens.t[[var]], sens.t$D47, type = "l", xlab = var, cex.lab = 1.4, cex.axis = 1.2,
-       ylab = expression(Delta[47]*" (\u2030)"))
-  plot(sens.t[[var]], sens.t$d13Co, type = "l", xlab = var, cex.lab = 1.4, cex.axis = 1.2,
-       ylab = expression(delta^"13"*"C"[o]*" (\u2030)"))
-  dev.off()
 }
