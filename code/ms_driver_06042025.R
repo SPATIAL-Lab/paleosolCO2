@@ -56,7 +56,7 @@ system.time({post.ms = jags.parallel(d, NULL, parms, "code/models/multi_sample_0
 View(post.ms$BUGSoutput$summary)
 save(post.ms, file = "out/ms_fuxian_D47_MS_ECS_1e5.rda")
 
-# load("out/ms_fuxian_1e5.rda")
+load("out/ms_fuxian_D47_MS_ECS_1e5.rda")
 post_data = data.frame(age = ai)
 for (i in 1:length(parms)) {
   name = parms[i]
@@ -79,7 +79,8 @@ write.csv(post_data, file = "out/ms_fuxian_D47_MS_ECS_1e5.csv")
 
 for (i in 1:length(parms)) {
   name = parms[i]
-  plot.jpi(ai, post.ms$BUGSoutput$sims.list[[name]], n = 100, ylab = name)
+  plot.jpi(ai, post.ms$BUGSoutput$sims.list[[name]], n = 100, xlab = "Age", ylab = name,
+           mgp = c(2,1,0))
 }
 
 

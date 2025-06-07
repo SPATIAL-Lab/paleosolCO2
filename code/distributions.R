@@ -5,23 +5,24 @@ pg = function(shp, rt){
   sd = sqrt(1/pre)
   plot(density(sd))
 }
+pg(10, 1)
 mean = 1
-var = .1
+var = .01
 rt = mean / var
-shape = mean * rt
-pg(10, 10)
+shp = mean * rt
+pg(shp, rt)
 
 ## For beta distribution
 pb = function(shp, rt){
   pre = rbeta(1e6, shp, rt)
   plot(density(pre))
 }
-mean = .55
+mean = .2
 var_max = mean * (1 - mean)
-var = .005
+var = .01
 shp = mean * (mean * (1 - mean) / var - 1)
 rt = (1 - mean) * (mean * (1 - mean) / var - 1)
-pb(27, 22) 
+pb(3, 12) 
 pb(0.55 * 10 / 0.45, 10)
 ## For normal distribution
 pn = function(mean, sd){

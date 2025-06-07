@@ -24,6 +24,8 @@ ice_co2 = ice_co2 |>
   mutate(across(everything(), as.numeric)) |>
   mutate(age = age / 1e6) |>
   filter(age > 0)
+write_csv(ice_co2, "data/global_data/ice_core_co2.csv")
+
 boron_co2 = read_csv("data/global_data/co2_proxy_data.csv")[, c(4, 7:9, 10)] |>
   filter(age > 800) |>
   mutate(age = age / 1e3)
@@ -39,6 +41,7 @@ boron_co2 = boron_co2 |>
   )) |>
   mutate(co2_lower = co2 - lower,
          co2_higher = co2 + higher)
+write_csv(boron_co2, "data/global_data/boron_co2.csv")
 
 # time series plot ----
 pal = mako(5)

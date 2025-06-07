@@ -7,9 +7,8 @@ theme = theme(panel.grid = element_blank(),
               plot.margin = margin(2, 2, 2, 2))
 parms = c("pCO2", "MAT", "PCQ_to", "tsc", "MAP", "PCQ_pf", "f_R", "spre")
 prior_range = read_xlsx("data/input_params_range.xlsx")[, c(1, 4, 6, 7)]
-cat("\014")
 
-# prior vs posterior distributions ----
+# load Bayesian data ----
 load("out/ms_fuxian_1e5.rda")
 post = post.ms
 load("out/ms_fuxian_D47_1e5.rda")
@@ -18,7 +17,9 @@ load("out/ms_fuxian_D47_MS_1e5.rda")
 post_47_ms = post.ms
 load("out/ms_fuxian_D47_MS_ECS_1e5.rda")
 post_47_ms_ecs = post.ms
+cat("\014")
 
+# prior vs posterior distributions ----
 prior_post = function(index, parms){
   plot_list = list()
   for (i in 1:length(parms)) {

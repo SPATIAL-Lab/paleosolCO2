@@ -165,7 +165,7 @@ model{
   for(i in 1:length(ai)){
     # Time dependent variables ----
     ## Primary environmental ----
-    # d13Ca[i] ~ dunif(-8, -5) # Atmospheric d13C, ppt
+    temp_diff[i] ~ dunif(0, 10)
     pCO2[i] ~ dunif(150, 600) # atmospheric CO2 mixing ratio
     # MAT[i] ~ dunif(4, 17) # mean annual temperature
     PCQ_to[i] ~ dunif(7, 15)
@@ -182,7 +182,6 @@ model{
     theta.bar[i] ~ dunif(0.05, 0.5) # mean water content
     pore[i] ~ dunif(0.45, 0.54) # soil porosity
     D13Cr[i] ~ dunif(-22, -10)
-    temp_diff[i] ~ dunif(0, 10)
   }
   
   # Not time dependent ----

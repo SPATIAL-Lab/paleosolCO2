@@ -40,11 +40,11 @@ ai = function(){
 }
 
 
-plot.jpi = function(x, y, n = 500, ylab = deparse(substitute(y)), ylim = range(y), ...){
+plot.jpi = function(x, y, n = 500, xlab, ylab, mgp, ylim = range(y), ...){
   # x = timeseries ages, y = simslist matrix
   inds = sample(seq_along(y[, 1]), n)
-  plot(x, y[inds[1],], type = "l", xlab = "Age", ylab = ylab, ylim = ylim, 
-       col = rgb(0, 0, 0, 0.05), ...)
+  plot(x, y[inds[1],], type = "l", xlab = xlab, ylab = ylab, ylim = ylim, 
+       col = rgb(0, 0, 0, 0.05), mgp = mgp, ...)
   for(i in inds[-1]){
     lines(x, y[i,], col = rgb(0, 0, 0, 0.1))
   }
