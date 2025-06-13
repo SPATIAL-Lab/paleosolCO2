@@ -126,15 +126,17 @@ ECS_sum = ECS_sum |>
 
 m1 = lm(gmst ~ R_sf, data = ECS_sum)
 summary(m1)
-ggplot(ECS_sum, aes(x = R_sf, y = gmst)) +
+p2 = ggplot(ECS_sum, aes(x = R_sf, y = gmst)) +
   geom_errorbar(aes(xmin = R_sf - R_sf_sd, xmax = R_sf + R_sf_sd),
                 linewidth = .2, width = 0, color = "grey80") +
   geom_errorbar(aes(ymin = gmst - gmst_sd, ymax = gmst + gmst_sd),
                 linewidth = .2, width = 0, color = "grey80") +
-  geom_smooth(method = "lm", color = "black") +
+  geom_smooth(method = "lm", color = "black", linetype = "dashed") +
   geom_point(aes(fill = time), shape = 21, size = 4) +
   annotate("text", x = -2.5, y = 3, label = expression("R"^"2"*" = 0.67")) +
   annotate("text", x = -2.5, y = 2.2, label = expression(italic(p)*" < 0.001")) +
+  annotate("text", x = 1.5, y = 3.9, label = "b",
+           size = 8, face = "bold") +
   scale_fill_viridis_c(option = "mako") +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -144,4 +146,8 @@ ggplot(ECS_sum, aes(x = R_sf, y = gmst)) +
   labs(x = expression(Delta*"R"["CO2,LI"]*" (W/K/m"^"2"*")"),
        y = expression(paste(Delta*"GMST (", degree, "C)")),
        fill = "Age (Ma)")
-ggsave("figure/climate_sensitivity_2.png", width = 3.5, height = 3.8, dpi = 500)  
+# ggsave("figure/climate_sensitivity_2.png", width = 3.5, height = 3.8, dpi = 500)  
+
+ggarrange(p1, p2, nrow = 1, ncol = 2, align = "hv")
+ggsave("figure/empirical_relationship.png", width = 7.5, height = 4,
+       dpi = 500, bg = "white")

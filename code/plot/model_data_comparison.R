@@ -14,6 +14,8 @@ names(blue_co2) = c("co2", "age", "exclude")
 blue_co2 = blue_co2 |>
   filter(is.na(exclude) & age > 800) |>
   mutate(age = age / 1e3)
+D47 = read_csv("data/CLP_data/D47.csv")
+D47$position = 5
 
 # plot CO2 ----
 p1 = ggplot(boron_co2, aes(x = age, y = co2)) +
@@ -53,10 +55,12 @@ p2 = ggplot(post_ms, aes(x = age, y = MAT)) +
                   ymax = MAT + MAT_sd),
               fill = "tomato", alpha = .2) +
   geom_point(shape = 21, size = 3, fill = "white", color = "tomato") +
-  annotate("text", x = .1, y = 5, label = "c", fontface = "bold", size = 7) +
+  geom_point(data = D47, aes(x = age, y = position),
+             shape = 21, size = 3) +
+  annotate("text", x = .1, y = 7, label = "b", fontface = "bold", size = 7) +
   theme_bw() + theme +
   scale_x_continuous(breaks = seq(0, 2.6, .5)) +
-  labs(x = "Age (Ma)", y = expression(paste("MAST (", degree, "C)")))
+  labs(x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
 
 # time series posteriors ----
 ages = seq(-3, 0, .05)
@@ -96,9 +100,11 @@ p3 = ggplot(boron_co2, aes(x = age, y = co2)) +
   geom_line(data = post_ts_ecs,
             aes(x = age, y = median), 
             size = 2, color = "royalblue") +
-  annotate("text", x = 2.5, y = 120, label = "b", fontface = "bold", size = 7) +
-  annotate("text", x = 2, y = 180, label = "w/ ECS", color = "royalblue", fontface = "bold", size = 5) +
-  annotate("text", x = .7, y = 150, label = "w/o ECS", color = "tomato", fontface = "bold", size = 5) +
+  annotate("text", x = 2.5, y = 120, label = "c", fontface = "bold", size = 7) +
+  # annotate("text", x = 2, y = 180, label = expression("w/ S"["CO2,LI"]), 
+  #          color = "royalblue", fontface = "bold", size = 5) +
+  # annotate("text", x = .7, y = 150, label = expression("w/o S"["CO2,LI"]), 
+  #          color = "tomato", fontface = "bold", size = 5) +
   scale_fill_viridis_d(option = "mako") +
   guides(fill = guide_legend(
     title = "",
@@ -139,12 +145,16 @@ p4 = ggplot(post_ts, aes(x = age, y = median)) +
   geom_line(data = post_ts_ecs,
             aes(x = age, y = median),
             shape = 21, size = 2, fill = "white", color = "royalblue") +
-  annotate("text", x = .1, y = 5, label = "d", fontface = "bold", size = 7) +
-  annotate("text", x = .5, y = 11, label = "w/ ECS", color = "royalblue", fontface = "bold", size = 5) +
-  annotate("text", x = 2, y = 8, label = "w/o ECS", color = "tomato", fontface = "bold", size = 5) +
+  geom_point(data = D47, aes(x = age, y = position),
+             shape = 21, size = 3) +
+  annotate("text", x = .1, y = 7 , label = "d", fontface = "bold", size = 7) +
+  # annotate("text", x = .5, y = 11, label = expression("w/ S"["CO2,LI"]), 
+  #          color = "royalblue", fontface = "bold", size = 5) +
+  # annotate("text", x = 2, y = 8, label = expression("w/o S"["CO2,LI"]), 
+  #          color = "tomato", fontface = "bold", size = 5) +
   theme_bw() + theme +
   scale_x_continuous(breaks = seq(0, 2.6, .5)) +
-  labs(x = "Age (Ma)", y = expression(paste("MAST (", degree, "C)")))
+  labs(x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
 
 ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, align = "v")
 ggsave("figure/model_data_comparison.png", width = 9, height = 6, dpi = 500)

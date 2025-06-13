@@ -45,7 +45,7 @@ axis(4, 2 + (tix - min(tix)) / diff(range(tix)), tix)
 mtext(expression(delta^"13"*"C"[o]*" (\u2030)"), 4, line = 2.5, at = 2.5)
 
 yext = range(fuxian_D47$D47_low, fuxian_D47$D47_high)
-tix = seq(floor(min(yext * 10)), ceiling(max(yext * 10)), by = .5) / 10
+tix = seq(floor(min(yext * 100)), ceiling(max(yext * 100)), by = 1) / 100
 D47c.rs = cbind(fuxian_D47$age,
                 1 + (fuxian_D47$D47 - min(tix)) / diff(range(tix)),
                 1 + (fuxian_D47$D47_low - min(tix)) / diff(range(tix)),
@@ -66,5 +66,10 @@ mtext(expression(italic(chi)[lf]* " (10"^"-8"*"m"^"3"*"kg"^"-1"*")"), 4, line = 
 
 axis(1)
 mtext("Age (Ma)", 1, line = 2.2)
+text(x = 0.1, y = 5, label = "a", cex = 1.3, font = 2)
+text(x = 0.1, y = 4, label = "b", cex = 1.3, font = 2)
+text(x = 0.1, y = 2.2, label = "c", cex = 1.3, font = 2)
+text(x = 0.1, y = 1.8, label = "d", cex = 1.3, font = 2)
+text(x = 0.1, y = .9, label = "e", cex = 1.3, font = 2)
 
 dev.off()

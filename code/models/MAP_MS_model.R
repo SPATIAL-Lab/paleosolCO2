@@ -25,16 +25,18 @@ ggplot(modern_soil, aes(x = MAP, y = MS)) +
 
 m2 = lm(log10(MS) ~ MAP, data = modern_soil)
 summary(m2)
-ggplot(modern_soil, aes(x = MAP, y = log10(MS))) +
+p1 = ggplot(modern_soil, aes(x = MAP, y = log10(MS))) +
   geom_smooth(method = "lm", linetype = "dashed", color = "black") +
   geom_point(shape = 21, size = 3) +
   annotate("text", x = 500, y = 1.2,
            label = expression("log"[10]*"("*italic(chi)[lf]*") = 0.0018 * MAP + 0.945")) +
   annotate("text", x = 350, y = 1.9,
            label = expression("R"^"2"*"=0.59, "*italic(p)*" < 0.001")) +
+  annotate("text", x = 250, y = 2.3,
+           label = "a", size = 8, face = "bold") +
   theme_bw() +
   theme(panel.grid = element_blank(),
-  ) +
+        axis.text = element_text(size = 10, color = "black")) +
   labs(x = "MAP (mm)",
        y = expression("log"[10]*"("*italic(chi)[lf]*")"))
 ggsave("figure/MAP_MS_model.png", width = 4, height = 4.5, dpi = 500)

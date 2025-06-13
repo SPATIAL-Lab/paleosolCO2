@@ -22,7 +22,7 @@ var_max = mean * (1 - mean)
 var = .01
 shp = mean * (mean * (1 - mean) / var - 1)
 rt = (1 - mean) * (mean * (1 - mean) / var - 1)
-pb(3, 12) 
+pb(27, 22) 
 pb(0.55 * 10 / 0.45, 10)
 ## For normal distribution
 pn = function(mean, sd){
