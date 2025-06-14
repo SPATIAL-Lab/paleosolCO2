@@ -80,31 +80,34 @@ mean(post_47_ms_ecs$pCO2_sd)
 post1 = data.frame(post[, c(2:11)], type = "post")
 post2 = data.frame(post_47[, c(2:11)], type = "post_47")
 composite = rbind(post1, post2)
-p1 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
-  geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
-                  ymax = pCO2 + pCO2_sd), alpha = .2) +
-  geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 550, label = "a", fontface = "bold", size = 5) +
-  theme_bw() + theme +
-  guides(fill = "none") +
-  scale_y_continuous(limits = c(150, 600)) +
-  labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
+# p1 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
+#   geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
+#                   ymax = pCO2 + pCO2_sd), alpha = .2) +
+#   geom_point(shape = 21, size = 3) +
+#   annotate("text", x = 0.1, y = 550, label = "a", fontface = "bold", size = 5) +
+#   theme_bw() + theme +
+#   guides(fill = "none") +
+#   scale_y_continuous(limits = c(150, 600)) +
+#   labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
 
-p2 = ggplot(composite, aes(x = age, y = MAT, group = type, fill = type)) +
+p1 = ggplot(composite, aes(x = age, y = MAT, group = type, fill = type)) +
   geom_ribbon(aes(ymin = MAT - MAT_sd,
-                  ymax = MAT + MAT_sd), alpha = .2) +
+                  ymax = MAT + MAT_sd), alpha = .2, show.legend = FALSE) +
   geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 16.5, label = "b", fontface = "bold", size = 5) +
+  annotate("text", x = 0.1, y = 16.5, label = "a", fontface = "bold", size = 5) +
+  scale_fill_discrete(labels = c(expression("w/o "*Delta[47]), expression("w "*Delta[47]))) +
   theme_bw() + theme + 
-  guides(fill = "none") +
+  theme(legend.position = c(.8, .8),
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA)) +
   scale_y_continuous(limits = c(4, 17)) +
   labs(fill = "", x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
 
-p3 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
+p2 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
   geom_ribbon(aes(ymin = PCQ_to - PCQ_to_sd,
                   ymax = PCQ_to + PCQ_to_sd), alpha = .2, show.legend = FALSE) +
   geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 14.8, label = "c", fontface = "bold", size = 5) +
+  annotate("text", x = 0.1, y = 14.8, label = "b", fontface = "bold", size = 5) +
   scale_fill_discrete(labels = c(expression("w/o "*Delta[47]), expression("w "*Delta[47]))) +
   theme_bw() + theme +
   theme(legend.position = c(.8, .2),
@@ -113,49 +116,52 @@ p3 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
   scale_y_continuous(limits = c(7, 15)) +
   labs(fill = "", x = "Age (Ma)", y = expression(paste(Delta*"T (", degree, "C)")))
 
-p_47 = ggarrange(p1, p2, p3, nrow = 3, ncol = 1, align = "hv")
-p_47
+# p_47 = ggarrange(p1, p2, p3, nrow = 3, ncol = 1, align = "hv")
+# p_47
 # ggsave("figure/time_series_D47.png", width = 4, height = 7, dpi = 500)
 
 # post_47 vs post_47_MS ----
 post1 = data.frame(post_47, type = "post_47")
 post2 = data.frame(post_47_ms, type = "post_47_MS")
 composite = rbind(post1, post2)
-p4 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
-  geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
-                  ymax = pCO2 + pCO2_sd), alpha = .2) +
-  geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 550, label = "d", fontface = "bold", size = 5) +
-  theme_bw() + theme +
-  guides(fill = "none") +
-  scale_y_continuous(limits = c(150, 600)) +
-  labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
+# p4 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
+#   geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
+#                   ymax = pCO2 + pCO2_sd), alpha = .2) +
+#   geom_point(shape = 21, size = 3) +
+#   annotate("text", x = 0.1, y = 550, label = "d", fontface = "bold", size = 5) +
+#   theme_bw() + theme +
+#   guides(fill = "none") +
+#   scale_y_continuous(limits = c(150, 600)) +
+#   labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
 
-p5 = ggplot(composite, aes(x = age, y = MAP, group = type, fill = type)) +
+p3 = ggplot(composite, aes(x = age, y = MAP, group = type, fill = type)) +
   geom_ribbon(aes(ymin = MAP - MAP_sd,
-                  ymax = MAP + MAP_sd), alpha = .2) +
+                  ymax = MAP + MAP_sd), alpha = .2, show.legend = FALSE) +
   geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 980, label = "e", fontface = "bold", size = 5) +
+  annotate("text", x = 0.1, y = 980, label = "c", fontface = "bold", size = 5) +
+  scale_fill_discrete(labels = c("w/o MS", "w MS")) +
   theme_bw() + theme + 
-  guides(fill = "none") +
+  theme(legend.position = c(.8, .9),
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA)) +
   scale_y_continuous(limits = c(1e2, 1e3)) +
   labs(fill = "", x = "Age (Ma)", y = "MAP (mm)")
 
-p6 = ggplot(composite, aes(x = age, y = PCQ_pf, group = type, fill = type)) +
+p4 = ggplot(composite, aes(x = age, y = PCQ_pf, group = type, fill = type)) +
   geom_ribbon(aes(ymin = PCQ_pf - PCQ_pf_sd,
                   ymax = PCQ_pf + PCQ_pf_sd), alpha = .2, show.legend = FALSE) +
   geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = .75, label = "f", fontface = "bold", size = 5) +
+  annotate("text", x = 0.1, y = .75, label = "d", fontface = "bold", size = 5) +
   scale_fill_discrete(labels = c("w/o MS", "w MS")) +
   theme_bw() + theme +
-  theme(legend.position = c(.8, .8),
+  theme(legend.position = c(.8, .9),
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA)) +
   scale_y_continuous(limits = c(.3, 0.8)) +
-  labs(fill = "", x = "Age (Ma)", y = expression("P"[PCQ]))
+  labs(fill = "", x = "Age (Ma)", y = expression(italic(f)[PPCQ]))
 
-p_ms = ggarrange(p4, p5, p6, nrow = 3, ncol = 1, align = "hv")
-p_ms
+# p_ms = ggarrange(p4, p5, p6, nrow = 3, ncol = 1, align = "hv")
+# p_ms
 # ggsave("figure/time_series_MS.png", width = 4, height = 7, dpi = 500)
 
 
@@ -163,45 +169,50 @@ p_ms
 post1 = data.frame(post_47_ms, type = "post_47_MS")
 post2 = data.frame(post_47_ms_ecs[1:32], type = "post_47_MS_ECS")
 composite = rbind(post1, post2)
-p7 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
-  geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
-                  ymax = pCO2 + pCO2_sd), alpha = .2) +
-  geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 550, label = "g", fontface = "bold", size = 5) +
-  theme_bw() + theme +
-  guides(fill = "none") +
-  scale_y_continuous(limits = c(100, 600)) +
-  labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
+# p7 = ggplot(composite, aes(x = age, y = pCO2, group = type, fill = type)) +
+#   geom_ribbon(aes(ymin = pCO2 - pCO2_sd,
+#                   ymax = pCO2 + pCO2_sd), alpha = .2) +
+#   geom_point(shape = 21, size = 3) +
+#   annotate("text", x = 0.1, y = 550, label = "g", fontface = "bold", size = 5) +
+#   theme_bw() + theme +
+#   guides(fill = "none") +
+#   scale_y_continuous(limits = c(100, 600)) +
+#   labs(fill = "", x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
 
-p8 = ggplot(composite, aes(x = age, y = MAT, group = type, fill = type)) +
+p5 = ggplot(composite, aes(x = age, y = MAT, group = type, fill = type)) +
   geom_ribbon(aes(ymin = MAT - MAT_sd,
-                  ymax = MAT + MAT_sd), alpha = .2) +
+                  ymax = MAT + MAT_sd), alpha = .2, show.legend = FALSE) +
   geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 23, label = "h", fontface = "bold", size = 5) +
+  annotate("text", x = 0.1, y = 23, label = "e", fontface = "bold", size = 5) +
+  scale_fill_discrete(labels = c(expression("w/ S"["CO2,LI"]),
+                                 expression("w/o S"["CO2,LI"]))) +
   theme_bw() + theme + 
-  guides(fill = "none") +
+  theme(legend.position = c(.8, .9),
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA)) +
   scale_y_continuous(limits = c(4, 25)) +
   labs(fill = "", x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
 
-p9 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
+p6 = ggplot(composite, aes(x = age, y = PCQ_to, group = type, fill = type)) +
   geom_ribbon(aes(ymin = PCQ_to - PCQ_to_sd,
                   ymax = PCQ_to + PCQ_to_sd), alpha = .2, show.legend = FALSE) +
   geom_point(shape = 21, size = 3) +
-  annotate("text", x = 0.1, y = 14.5, label = "i", fontface = "bold", size = 5) +
-  scale_fill_discrete(labels = c("w/o ECS", "w ECS")) +
+  annotate("text", x = 0.1, y = 14.5, label = "f", fontface = "bold", size = 5) +
+  scale_fill_discrete(labels = c(expression("w/ S"["CO2,LI"]),
+                                 expression("w/o S"["CO2,LI"]))) +
   theme_bw() + theme +
-  theme(legend.position = c(.8, .8),
+  theme(legend.position = c(.8, .9),
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA)) +
   scale_y_continuous(limits = c(7, 15)) +
   labs(fill = "", x = "Age (Ma)", y = expression(paste(Delta*"T (", degree, "C)")))
 
-p_ecs = ggarrange(p7, p8, p9, nrow = 3, ncol = 1, align = "hv")
-p_ecs
+# p_ecs = ggarrange(p7, p8, p9, nrow = 3, ncol = 1, align = "hv")
+# p_ecs
 # ggsave("figure/time_series_ECS.png", width = 4, height = 7, dpi = 500)
 
-ggarrange(p_47, p_ms, p_ecs, nrow = 1, ncol = 3, align = "v")
-ggsave("figure/ms_time_series.png", width = 9.5, height = 6.6, dpi = 500)
+ggarrange(p1, p2, p3, p4, p5, p6, nrow = 3, ncol = 2, align = "hv")
+ggsave("figure/ms_time_series.png", width = 7.5, height = 7.4, dpi = 500)
 
 
 # function to create data frame used to plot parameter curves ----

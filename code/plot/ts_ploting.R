@@ -17,7 +17,7 @@ post_47_ms = post.ts
 load("out/ts_fuxian_D47_MS_ECS_1e4.rda")
 post_47_ms_ecs = post.ts
 cat("\014")
-
+mean(post_47_ms_ecs$BUGSoutput$sd$pCO2)
 # prior vs posterior distributions ----
 prior_post = function(index, name){
   prior_info = prior_range |>
@@ -143,16 +143,16 @@ dev.off()
 # ECS ----
 png("figure/ts_time_series_D47_MS_ECS.png", width = 6.5, height = 7.2, units = "in", res = 500)
 par(mfrow = c(3, 2), mar = c(3, 3, 1, 1))
-plot.jpi(ages, post_47_ms$BUGSoutput$sims.list$pCO2, n = 500, 
-         xlab = "Age (Ma)", ylab = expression("CO"[2]*" (ppmv)"),
+plot.jpi(ages, post_47_ms$BUGSoutput$sims.list$MAP, n = 500, 
+         xlab = "Age (Ma)", ylab = "MAP (mm)",
          mgp = c(2, .8, 0))
-text(-2.7, 80, "a", cex = 1.5, font = 2)
-text(-1, 500, labels = expression(Delta[47]*" + MS"), cex = 1.5)
-plot.jpi(ages, post_47_ms_ecs$BUGSoutput$sims.list$pCO2, n = 500, 
-         xlab = "Age (Ma)", ylab = expression("CO"[2]*" (ppmv)"),
+text(-0.2, 150, "a", cex = 1.5, font = 2)
+text(-1, 600, labels = expression(Delta[47]*" + MS"), cex = 1.5)
+plot.jpi(ages, post_47_ms_ecs$BUGSoutput$sims.list$MAP, n = 500, 
+         xlab = "Age (Ma)", ylab = "MAP",
          mgp = c(2, .8, 0))
-text(-2.7, 80, "b", cex = 1.5, font = 2)
-text(-1, 500, labels = expression(Delta[47]*" + MS + ECS"), cex = 1.5)
+text(-0.2, 1200, "b", cex = 1.5, font = 2)
+text(-1.5, 1200, labels = expression(Delta[47]*" + MS + ECS"), cex = 1.5)
 plot.jpi(ages, post_47_ms$BUGSoutput$sims.list$MAT, n = 500, 
          xlab = "Age (Ma)", ylab = expression(paste("MAT (", degree, "C)")),
          mgp = c(2, .8, 0))
