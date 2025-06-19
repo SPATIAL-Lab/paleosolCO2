@@ -4,14 +4,14 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read and groom data ----
-clp = read.csv("data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
+clp = read.csv("data/CLP_data/loess_glacial.csv") %>% filter(section == "Zhaojiachuan")
 clp = clp[,1:8]
 # clp = read.csv("data/loess_interglacial.csv") %>% filter(age < 2.6)
 # clp = clp[,1:9]
 # clp = read.csv("data/D47.csv")
 # clp = clp[order(clp$age),]
 
-md = read.csv("data/d13Ca_tipple.csv") %>% filter(age <= max(clp$age) + 0.1)
+md = read.csv("data/global_data/d13Ca_tipple.csv") %>% filter(age <= max(clp$age) + 0.1)
 clp$d13a = approx(x = md$age, y = md$d13C, xout = clp$age)$y
 
 ## Propagate measurement, within outcrop, and within age bin uncertainties

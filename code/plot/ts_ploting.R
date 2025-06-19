@@ -175,6 +175,47 @@ text(-2.7, -10, "f", cex = 1.5, font = 2)
 text(-1, -10, labels = expression(Delta[47]*" + MS + ECS"), cex = 1.5)
 dev.off()
 
+
+# key parameters for different versions ----
+png("figure/ts_time_series.png", width = 6.5, height = 7.2, units = "in", res = 500)
+par(mfrow = c(3, 2), mar = margin(3, 3, 1, 1))
+plot.jpi(ages, post$BUGSoutput$sims.list$MAT, n = 500, 
+         xlab = "Age (Ma)", ylab = expression(paste("MAT (", degree, "C)")),
+         mgp = c(2, .8, 0))
+text(-2.7, -5, "a", cex = 1.5, font = 2)
+text(-2, 20, labels = "base version", cex = 1.1)
+
+plot.jpi(ages, post_47$BUGSoutput$sims.list$MAT, n = 500, 
+         xlab = "Age (Ma)", ylab = expression(paste("MAT (", degree, "C)")),
+         mgp = c(2, .8, 0))
+text(-2.7, 0, "b", cex = 1.5, font = 2)
+text(-2, 23, labels = expression(Delta[47]*" version"), cex = 1.1)
+
+plot.jpi(ages, post_47$BUGSoutput$sims.list$MAP, n = 500, 
+         xlab = "Age (Ma)", ylab = "MAP (mm)",
+         mgp = c(2, .8, 0))
+text(-2.7, 1.9e3, "c", cex = 1.5, font = 2)
+text(-1.5, 1.8e3, labels = expression(Delta[47]*" version"), cex = 1.1)
+
+plot.jpi(ages, post_47_ms$BUGSoutput$sims.list$MAP, n = 500, 
+         xlab = "Age (Ma)", ylab = "MAP (mm)",
+         mgp = c(2, .8, 0))
+text(-.2, 150, "d", cex = 1.5, font = 2)
+text(-1.5, 650, labels = "MS version", cex = 1.1)
+
+plot.jpi(ages, post_47_ms$BUGSoutput$sims.list$MAT, n = 500, 
+         xlab = "Age (Ma)", ylab = expression(paste("MAT (", degree, "C)")),
+         mgp = c(2, .8, 0))
+text(-2.7, 25, "e", cex = 1.5, font = 2)
+text(-1.5, 23, labels = expression(Delta[47]*" version"), cex = 1.1)
+
+plot.jpi(ages, post_47_ms_ecs$BUGSoutput$sims.list$MAT, n = 500, 
+         xlab = "Age (Ma)", ylab = expression(paste("MAT (", degree, "C)")),
+         mgp = c(2, .8, 0))
+text(-2.7, -10, "f", cex = 1.5, font = 2)
+text(-1.5, -5, labels = expression("S"[CO2,LI]*" version"), cex = 1.1)
+dev.off()
+
 # function to create data frame used to plot parameter curves ----
 fm.ts = function(site, var, param) {
   age = seq(-2.6, 0, by = 0.1)
@@ -186,9 +227,6 @@ fm.ts = function(site, var, param) {
   post.var$age = -post.var$age
   results = post.var
 }
-
-
-
 
 mean(post$BUGSoutput$sd$pCO2)
 mean(post_47$BUGSoutput$sd$pCO2)
