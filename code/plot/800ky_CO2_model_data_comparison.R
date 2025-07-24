@@ -3,10 +3,10 @@ pacman::p_load(tidyverse, readxl, ggpubr)
 theme = theme(panel.grid = element_blank(),
               axis.text = element_text(size = 10, color = "black"),
               plot.title = element_text(hjust = 0.1, vjust = -10))
-post = read_csv("out/ms_fuxian_1e5.csv")
-post_47 = read_csv("out/ms_fuxian_D47_1e5.csv")
-post_47_ms = read_csv("out/ms_fuxian_D47_MS_1e5.csv")
-post_47_ms_ecs = read_csv("out/ms_fuxian_D47_MS_ECS_1e5.csv")
+post = read_csv("out/ms_fuxian_2e5.csv")
+post_47 = read_csv("out/ms_fuxian_D47_2e5.csv")
+post_47_ms = read_csv("out/ms_fuxian_D47_MS_2e5.csv")
+post_47_ms_ecs = read_csv("out/ms_fuxian_D47_MS_ECS_2e5.csv")
 # post_ts = read_csv("out/ts")
 ice_co2 = read_csv("data/global_data/ice_core_co2.csv")
 

@@ -1,5 +1,5 @@
 rm(list = ls())
-pacman::p_load(R2jags, readxl, tidyverse)
+pacman::p_load(rjags, R2jags, readxl, tidyverse)
 source("code/constructors.R")
 source("code/helpers.R")
 
@@ -63,3 +63,5 @@ for (i in 1:length(parms)) {
   plot.jpi(ai, post.ts$BUGSoutput$sims.list[[name]], n = 5e2, 
            xlab = "Age (Ma)", ylab = name, mgp = c(2, .8, 0))
 }
+
+# load("out/ts_fuxian_D47_MS_ECS_1e5.rda")

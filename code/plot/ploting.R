@@ -1,52 +1,7 @@
+rm(list = ls())
 source("code/helpers.R")
 pal = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C")
 
-# View(post$BUGSoutput$summary)
-
-## plot proxies ----
-par(mar = c(4, 4, 1, 4))
-plot(0.2, 0, xlim = c(-3, 0), ylim = c(0, 4), axes = FALSE, xlab = "", ylab = "")
-
-yext = range(clp$d13C)
-tix = seq(floor(min(yext)), 
-          ceiling(max(yext)), by = 2)
-clp.d13Crs = cbind(-clp$age,
-                  3 + (clp$d13C - min(tix)) / diff(range(tix)))
-points(clp.d13Crs[, 1], clp.d13Crs[, 2], col = "black", bg = pal[1], pch = 21, cex = 1)
-axis(2, 3 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression(delta^"13"*"C"[c]*" (\u2030)"), 2, line = 2.5, at = 3.5)
-
-yext = range(clp$d18O)
-tix = seq(floor(min(yext)), 
-          ceiling(max(yext)), by = 2)
-clp.d18Ors = cbind(-clp$age,
-                   2 + (clp$d18O - min(tix)) / diff(range(tix)))
-points(clp.d18Ors[, 1], clp.d18Ors[, 2], col = "black", bg = pal[2], pch = 21, cex = 1)
-axis(4, 2 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression(delta^"18"*"O"[c]*" (\u2030)"), 4, line = 2.5, at = 2.5)
-
-yext = range(clp$d13Co, na.rm = TRUE)
-tix = seq(floor(min(yext)), 
-          ceiling(max(yext)), by = 1)
-clp.d13Cors = cbind(-clp$age,
-                   1 + (clp$d13Co - min(tix)) / diff(range(tix)))
-points(clp.d13Cors[, 1], clp.d13Cors[, 2], col = "black", bg = pal[3], pch = 21, cex = 1)
-axis(2, 1 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression(delta^"13"*"C"[o]*" (\u2030)"), 2, line = 2.5, at = 1.5)
-
-yext = range(clp$D47, na.rm = TRUE)
-tix = seq(ceiling(max(yext)*100), 
-          floor(min(yext)*100), by = -1) / 100
-clp.D47rs = cbind(-clp$age,
-                    1 - (clp$D47 - min(tix)) / diff(range(tix)))
-points(clp.D47rs[, 1], clp.D47rs[, 2], col = "black", bg = pal[5], pch = 21, cex = 1)
-axis(4, 1 - (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression(Delta*"47 (\u2030)"), 4, line = 2.5, at = 0.5)
-
-axis(1)
-mtext("Age (Ma)", 1, line = 2)
-
-dev.off()
 ## plot w/ iterations ----
 # for output without time-series model
 load("out/ts_fx_1e5_30ppm_0.05Ma.rda")

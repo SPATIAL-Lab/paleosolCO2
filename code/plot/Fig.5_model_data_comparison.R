@@ -1,9 +1,9 @@
 rm(list = ls())
-pacman::p_load(tidyverse, readxl)
+pacman::p_load(tidyverse, readxl, ggpubr)
 theme = theme(panel.grid = element_blank(),
               axis.text = element_text(size = 10, color = "black"),
               plot.title = element_text(hjust = 0.1, vjust = -10))
-post_ms = read_csv("out/ms_fuxian_D47_MS_ECS_1e5.csv")
+post_ms = read_csv("out/ms_fuxian_D47_MS_ECS_2e5.csv")
 # post_ts = read_csv("out/ts")
 
 # load CO2 records ----
@@ -33,7 +33,7 @@ p1 = ggplot(boron_co2, aes(x = age, y = co2)) +
              shape = 23, size = 3, fill = "lightblue1") +
   geom_point(data = post_ms, aes(x = age, y = pCO2),
              shape = 21, size = 3, fill = "white", color = "tomato") +
-  annotate("text", x = 2.5, y = 160, label = "a", fontface = "bold", size = 7) +
+  annotate("text", x = 2.5, y = 160, label = "a", size = 7) +
   scale_fill_viridis_d(option = "mako") +
   guides(fill = guide_legend(
     title = "",
@@ -57,11 +57,11 @@ p2 = ggplot(post_ms, aes(x = age, y = MAT)) +
   geom_point(shape = 21, size = 3, fill = "white", color = "tomato") +
   geom_point(data = D47, aes(x = age, y = position),
              shape = 21, size = 3) +
-  annotate("text", x = .1, y = 7, label = "b", fontface = "bold", size = 7) +
+  annotate("text", x = 2.9, y = 5, label = "b", size = 7) +
   theme_bw() + theme +
-  scale_x_continuous(breaks = seq(0, 2.6, .5)) +
+  scale_x_continuous(breaks = seq(0, 3, .5)) +
   labs(x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
-
+p2
 # time series posteriors ----
 ages = seq(-3, 0, .05)
 load("out/ts_fuxian_D47_MS_1e4.rda")
@@ -96,15 +96,11 @@ p3 = ggplot(boron_co2, aes(x = age, y = co2)) +
              shape = 23, size = 3, fill = "lightblue1") +
   geom_line(data = post_ts,
             aes(x = age, y = median), 
-            size = 2, color = "tomato") +
+            linewidth = 2, color = "tomato") +
   geom_line(data = post_ts_ecs,
             aes(x = age, y = median), 
-            size = 2, color = "royalblue") +
-  annotate("text", x = 2.5, y = 120, label = "c", fontface = "bold", size = 7) +
-  # annotate("text", x = 2, y = 180, label = expression("w/ S"["CO2,LI"]), 
-  #          color = "royalblue", fontface = "bold", size = 5) +
-  # annotate("text", x = .7, y = 150, label = expression("w/o S"["CO2,LI"]), 
-  #          color = "tomato", fontface = "bold", size = 5) +
+            linewidth = 2, color = "royalblue") +
+  annotate("text", x = 2.5, y = 120, label = "c", size = 7) +
   scale_fill_viridis_d(option = "mako") +
   guides(fill = guide_legend(
     title = "",
@@ -115,7 +111,7 @@ p3 = ggplot(boron_co2, aes(x = age, y = co2)) +
         legend.background = element_rect(fill = NA)) +
   scale_x_continuous(breaks = seq(0, 2.6, .5)) +
   labs(x = "Age (Ma)", y = expression("CO"[2]*" (ppmv)"))
-
+p3
 load("out/ts_fuxian_D47_MS_1e4.rda")
 post_ts = data.frame(ages, t(apply(post.ts$BUGSoutput$sims.list$MAT, 2, quantile,
                                    c(.16, .5, .84))))
@@ -141,20 +137,16 @@ p4 = ggplot(post_ts, aes(x = age, y = median)) +
               fill = "royalblue", alpha = .2) +
   geom_line(data = gdgt, aes(x = age, y = MAST),
             color = "grey50") +
-  geom_line(shape = 21, size = 2, fill = "white", color = "tomato") +
+  geom_line(shape = 21, linewidth = 2, fill = "white", color = "tomato") +
   geom_line(data = post_ts_ecs,
             aes(x = age, y = median),
-            shape = 21, size = 2, fill = "white", color = "royalblue") +
+            shape = 21, linewidth = 2, fill = "white", color = "royalblue") +
   geom_point(data = D47, aes(x = age, y = position),
              shape = 21, size = 3) +
-  annotate("text", x = .1, y = 7 , label = "d", fontface = "bold", size = 7) +
-  # annotate("text", x = .5, y = 11, label = expression("w/ S"["CO2,LI"]), 
-  #          color = "royalblue", fontface = "bold", size = 5) +
-  # annotate("text", x = 2, y = 8, label = expression("w/o S"["CO2,LI"]), 
-  #          color = "tomato", fontface = "bold", size = 5) +
+  annotate("text", x = 2.9, y = 5, label = "d", size = 7) +
   theme_bw() + theme +
-  scale_x_continuous(breaks = seq(0, 2.6, .5)) +
+  scale_x_continuous(breaks = seq(0, 3, .5)) +
   labs(x = "Age (Ma)", y = expression(paste("MAT (", degree, "C)")))
-
+p4
 ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, align = "v")
-ggsave("figure/model_data_comparison.png", width = 9, height = 6, dpi = 500)
+ggsave("figure/Fig.5_model_data_comparison.png", width = 9, height = 6, dpi = 500)
