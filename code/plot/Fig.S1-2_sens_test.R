@@ -119,7 +119,7 @@ for (i in 1:100) {
 }
 
 # d13Cc plot ----
-png("figure/sens_d13c.png", width = 6.2, height = 6.2, units = "in", res = 300)
+png("figure/Fig.S1_sens_d13c.png", width = 6.2, height = 6.2, units = "in", res = 300)
 par(mfrow = c(3, 3), mar = c(3,4,1,1))
 plot(results_CO2$pCO2, results_CO2$d13Cc, type = "l",
      xlab = expression("CO"[2]*" (ppmv)"),
@@ -171,7 +171,7 @@ text(.05, -8.9, "h", cex = 1.5, font = 2)
 dev.off()
 
 # d18Oc ----
-png("figure/sens_d18c.png", width = 6.2, height = 6.2, units = "in", res = 300)
+png("figure/Fig.S2_sens_d18c.png", width = 6.2, height = 6.2, units = "in", res = 300)
 par(mfrow = c(3, 3), mar = c(3,4,1,1))
 plot(results_MAP$MAP, results_MAP$d18Oc, type = "l",
      xlab = "MAP (mm)",

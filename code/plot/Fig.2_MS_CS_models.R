@@ -83,7 +83,7 @@ p2 = ggplot(ECS_sum, aes(x = R_sf, y = gmst)) +
   labs(x = expression(Delta*"R"["CO2,LI"]*" (W/K/m"^"2"*")"),
        y = expression(paste(Delta*"GMST (", degree, "C)")),
        fill = "Age (Ma)")
-# ggsave("figure/climate_sensitivity_2.png", width = 3.5, height = 3.8, dpi = 500)  
+p2
 ggarrange(p1, p2, nrow = 1, ncol = 2, align = "hv")
 ggsave("figure/Fig.2_MS_CS_models.png", width = 8, height = 4,
        dpi = 500, bg = "white")

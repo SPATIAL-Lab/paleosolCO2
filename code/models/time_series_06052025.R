@@ -28,12 +28,12 @@ model{
   
   for(i in 1:length(ai)){  
     # Equilibrium climate sensitivity
-    DR_sf[i] = 5.35 * log(pCO2[i] / 278) + .45 * R_ice[i]
-    DGMST_mean[i] = DR_sf[i] * 2.02 + 1.635
-    DGMST_var[i] ~ dgamma(1 / 0.2 ^ 2, 1 / 0.2 ^ 2)
-    DGMST[i] = DGMST_mean[i] * DGMST_var[i]
-    GMST[i] = 13.7 + DGMST[i]
-    MAT[i] = GMST[i] + temp_diff[i]
+    # DR_sf[i] = 5.35 * log(pCO2[i] / 278) + .45 * R_ice[i]
+    # DGMST_mean[i] = DR_sf[i] * 2.02 + 1.635
+    # DGMST_var[i] ~ dgamma(1 / 0.2 ^ 2, 1 / 0.2 ^ 2)
+    # DGMST[i] = DGMST_mean[i] * DGMST_var[i]
+    # GMST[i] = 13.7 + DGMST[i]
+    # MAT[i] = GMST[i] + temp_diff[i]
 
     # MAP - MS model
     log_MS[i] = 1.8e-3 * MAP[i] + .945
@@ -182,9 +182,9 @@ model{
     temp_diff.eps[i] ~ dnorm(temp_diff.eps[i - 1] * (temp_diff.phi ^ dt), temp_diff.pc[i])
     temp_diff.pc[i] = temp_diff.tau * ((1 - temp_diff.phi ^ 2) / (1 - temp_diff.phi ^ (2 * dt)))
 
-    # MAT[i] = MAT[i - 1] + MAT.eps[i]
-    # MAT.eps[i] ~ dnorm(MAT.eps[i - 1] * (MAT.phi ^ dt), MAT.pc[i])
-    # MAT.pc[i] = MAT.tau * ((1 - MAT.phi ^ 2) / (1 - MAT.phi ^ (2 * dt)))
+    MAT[i] = MAT[i - 1] + MAT.eps[i]
+    MAT.eps[i] ~ dnorm(MAT.eps[i - 1] * (MAT.phi ^ dt), MAT.pc[i])
+    MAT.pc[i] = MAT.tau * ((1 - MAT.phi ^ 2) / (1 - MAT.phi ^ (2 * dt)))
     
     PCQ_to[i] = PCQ_to[i - 1] + PCQ_to.eps[i]
     PCQ_to.eps[i] ~ dnorm(PCQ_to.eps[i - 1] * (PCQ_to.phi ^ dt), PCQ_to.pc[i])
@@ -269,8 +269,8 @@ model{
   pCO2.eps[1] = 0
   temp_diff[1] ~ dunif(0, 10)
   temp_diff.eps[1] = 0
-  # MAT[1] ~ dunif(4, 17) # terrestrial temperature, C
-  # MAT.eps[1] = 0
+  MAT[1] ~ dunif(4, 17) # terrestrial temperature, C
+  MAT.eps[1] = 0
   PCQ_to[1] ~ dunif(7, 15) # PCQ temperature offset, C
   PCQ_to.eps[1] = 0
   MAP[1] ~ dunif(1e2, 1e3) # mean annual precipitation, mm

@@ -54,10 +54,10 @@ parms = c("pCO2", "MAT", "PCQ_to", "tsc", "MAP", "PCQ_pf",
           "Tsoil", "S_z", "f_R", "spre", "pore", "temp_diff")
 
 system.time({post.ts = jags.parallel(d, NULL, parms, "code/models/time_series_06052025.R", 
-                        n.iter = 1e5, n.chains = 3, n.burnin = 1e4)})
+                        n.iter = 2e5, n.chains = 3, n.burnin = 5e4)})
 
 View(post.ts$BUGSoutput$summary)
-save(post.ts, file = "out/ts_fuxian_D47_MS_ECS_1e5.rda")
+save(post.ts, file = "out/ts_fuxian_D47_MS_2e5.rda")
 for (i in 1:length(parms)) {
   name = parms[i]
   plot.jpi(ai, post.ts$BUGSoutput$sims.list[[name]], n = 5e2, 

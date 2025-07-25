@@ -28,10 +28,13 @@ model{
   
   for(i in 1:length(ai)){
     # Equilibrium climate sensitivity
-    DR_sf[i] = 5.35 * log(pCO2[i] / 278) + .45 * R_ice[i]
-    DGMST[i] = DR_sf[i] * 2.02 + 1.635
-    GMST[i] = 13.7 + DGMST[i]
-    MAT[i] = GMST[i] + temp_diff[i]
+    # DR_sf[i] = 5.35 * log(pCO2[i] / 278) + .45 * R_ice[i]
+    # slope[i] ~ dnorm(2.02, 1 / 0.29 ^ 2) 
+    # intercept[i] ~ dnorm(1.635, 1 / 0.472 ^ 2)
+    # ECS[i] = 5.35 * log(2) * slope[i] * 0.64
+    # DGMST[i] = DR_sf[i] * slope[i] + intercept[i]
+    # GMST[i] = 13.7 + DGMST[i]
+    # MAT[i] = GMST[i] + temp_diff[i]
     
     # Soil carbonate ----
     # MAP - MS model
@@ -167,7 +170,7 @@ model{
     ## Primary environmental ----
     temp_diff[i] ~ dunif(0, 10)
     pCO2[i] ~ dunif(150, 600) # atmospheric CO2 mixing ratio
-    # MAT[i] ~ dunif(4, 17) # mean annual temperature
+    MAT[i] ~ dunif(4, 17) # mean annual temperature
     PCQ_to[i] ~ dunif(7, 15)
     MAP[i] ~ dunif(1e2, 1e3) # mean annual precipitation, mm
     PCQ_pf[i] ~ dunif(0.3, 1) # PCQ precipitation fraction

@@ -48,13 +48,15 @@ d = list(ai = ages$ts, d13Ca = clp$d13a, R_ice = clp$R_ice,
 )
 
 parms = c("pCO2", "MAT", "PCQ_to", "tsc", "MAP", "PCQ_pf",
-          "Tsoil", "S_z", "f_R", "spre", "pore", "temp_diff")
+          "Tsoil", "S_z", "f_R", "spre", "pore", "temp_diff"
+          # , "ECS"
+          )
 
 system.time({post.ms = jags.parallel(d, NULL, parms, "code/models/multi_sample_06042025.R",
-                                      n.iter = 2e5, n.chains = 3, n.burnin = 1e4)})
+                                      n.iter = 1e5, n.chains = 3, n.burnin = 1e4)})
 
 View(post.ms$BUGSoutput$summary)
-save(post.ms, file = "out/ms_fuxian_D47_MS_ECS_2e5.rda")
+save(post.ms, file = "out/ms_fuxian_D47_MS_1e5.rda")
 
 # load("out/ms_fuxian_D47_MS_ECS_1e5.rda")
 post_data = data.frame(age = ai)
@@ -75,7 +77,7 @@ for (i in 1:length(parms)) {
     }
   }
 }
-write.csv(post_data, file = "out/ms_fuxian_D47_MS_ECS_2e5.csv")
+write.csv(post_data, file = "out/ms_fuxian_D47_MS_1e5.csv")
 
 for (i in 1:length(parms)) {
   name = parms[i]

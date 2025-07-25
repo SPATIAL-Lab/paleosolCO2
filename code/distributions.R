@@ -5,7 +5,7 @@ pg = function(shp, rt){
   sd = sqrt(1/pre)
   plot(density(sd))
 }
-pg(10, 1)
+pg(100, 100)
 mean = 1
 var = .01
 rt = mean / var
