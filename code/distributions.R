@@ -6,8 +6,8 @@ pg = function(shp, rt){
   plot(density(sd))
 }
 pg(100, 100)
-mean = 1
-var = .01
+mean = 0.86
+var = .14
 rt = mean / var
 shp = mean * rt
 pg(shp, rt)
@@ -17,12 +17,12 @@ pb = function(shp, rt){
   pre = rbeta(1e6, shp, rt)
   plot(density(pre))
 }
-mean = .2
+mean = .86
 var_max = mean * (1 - mean)
-var = .01
+var = .12
 shp = mean * (mean * (1 - mean) / var - 1)
 rt = (1 - mean) * (mean * (1 - mean) / var - 1)
-pb(27, 22) 
+pb(6.956, 1.139) 
 pb(0.55 * 10 / 0.45, 10)
 ## For normal distribution
 pn = function(mean, sd){

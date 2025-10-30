@@ -1,14 +1,11 @@
 rm(list = ls())
-pacman::p_load(R2jags, readxl)
+pacman::p_load(R2jags, readxl, tidyverse)
 source("code/constructors.R")
 source("code/helpers.R")
 
 ## Read and groom data ----
-clp = read.csv("data/CLP_data/loess_glacial.csv") |> 
-  filter(section == "Fuxian") |>
-  select(age, d13c, d18c, d13o, MS)
-D47 = read.csv("data/CLP_data/D47.csv") |>
-  select(age, D47, D47.sd)
+clp = read.csv("data/CLP_data/fuxian_stable_isotope.csv") 
+D47 = read.csv("data/CLP_data/fuxian_D47.csv")
 clp$D47 = approx(x = D47$age, y = D47$D47, xout = clp$age)$y
 clp$D47_se = approx(x = D47$age, y = D47$D47.sd, xout = clp$age)$y
 
@@ -48,41 +45,35 @@ d = list(ai = ages$ts, d13Ca = clp$d13a, R_ice = clp$R_ice,
 )
 
 parms = c("pCO2", "MAT", "PCQ_to", "tsc", "MAP", "PCQ_pf",
-          "Tsoil", "S_z", "f_R", "spre", "pore", "temp_diff"
-          # , "ECS"
-          )
+          "Tsoil", "S_z", "f_R", "spre", "pore", "temp_diff")
 
-system.time({post.ms = jags.parallel(d, NULL, parms, "code/models/multi_sample_06042025.R",
-                                      n.iter = 1e5, n.chains = 3, n.burnin = 1e4)})
+system.time({post.ms = jags.parallel(d, NULL, parms, "code/models/multi_sample.R",
+                                      n.iter = 2e5, n.chains = 3, n.burnin = 1e5)})
 
 View(post.ms$BUGSoutput$summary)
-save(post.ms, file = "out/ms_fuxian_D47_MS_1e5.rda")
-
-# load("out/ms_fuxian_D47_MS_ECS_1e5.rda")
-post_data = data.frame(age = ai)
-for (i in 1:length(parms)) {
-  name = parms[i]
-  name_sd = paste0(parms[i], "_sd")
-  name_eff = paste0(parms[i], "_eff")
-  for (p in 1:nrow(post_data)) {
-    post_data[[name]][p] = mean(post.ms$BUGSoutput$sims.list[[name]][, p])
-    post_data[[name_sd]][p] = sd(post.ms$BUGSoutput$sims.list[[name]][, p])
-    index = nrow(post_data) * (i - 1) + p
-    rhat = post.ms$BUGSoutput$summary[index, "Rhat"]
-    n_eff = post.ms$BUGSoutput$summary[index, "n.eff"]
-    if (rhat < 1.01) {
-      post_data[[name_eff]][p] = "positive"
-    } else {
-      post_data[[name_eff]][p] = "negative"
-    }
-  }
-}
-write.csv(post_data, file = "out/ms_fuxian_D47_MS_1e5.csv")
+save(post.ms, file = "out/ms_fuxian_ECS_2e5.rda")
 
 for (i in 1:length(parms)) {
   name = parms[i]
   plot.jpi(ai, post.ms$BUGSoutput$sims.list[[name]], n = 100, xlab = "Age", ylab = name,
            mgp = c(2,1,0))
 }
+
+load("out/ms_fuxian_D47_MS_ECS_2e5.rda")
+post_data = data.frame(age = ai)
+for (i in 1:length(parms)) {
+  name = parms[i]
+  name_sd = paste0(parms[i], "_sd")
+  name_rhat = paste0(parms[i], "_rhat")
+  name_eff = paste0(parms[i], "_n.eff")
+  for (p in 1:nrow(post_data)) {
+    post_data[[name]][p] = mean(post.ms$BUGSoutput$sims.list[[name]][, p])
+    post_data[[name_sd]][p] = sd(post.ms$BUGSoutput$sims.list[[name]][, p])
+    rowname = paste0(name,"[", p, "]")
+    post_data[[name_rhat]][p] = post.ms$BUGSoutput$summary[rowname, "Rhat"]
+    post_data[[name_eff]][p] = post.ms$BUGSoutput$summary[rowname, "n.eff"]
+  }
+}
+write.csv(post_data, file = "out/ms_fuxian_D47_MS_ECS_2e5.csv")
 
 

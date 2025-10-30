@@ -2,13 +2,8 @@ rm(list = ls())
 pacman::p_load(tidyverse, readxl)
 
 # load and groom data ----
-fuxian = read.csv("data/CLP_data/loess_glacial.csv") |>
-  filter(section == "Fuxian") |>
-  select(age, d13c, d18c, d13o, MS)
-fuxian_D47 = read.csv("data/CLP_data/D47.csv") |>
-  select(age, D47, D47.sd) |>
-  mutate(D47_low = D47 - D47.sd,
-         D47_high = D47 + D47.sd)
+fuxian = read.csv("data/CLP_data/fuxian_stable_isotope.csv")
+fuxian_D47 = read.csv("data/CLP_data/fuxian_D47.csv")
 
 # plot ----
 pal = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C")
@@ -44,17 +39,17 @@ points(d13o.rs[, 1], d13o.rs[, 2], col = "black", bg = pal[2], pch = 21, cex = 1
 axis(4, 2 + (tix - min(tix)) / diff(range(tix)), tix)
 mtext(expression(delta^"13"*"C"[o]*" (\u2030)"), 4, line = 2.5, at = 2.5)
 
-yext = range(fuxian_D47$D47_low, fuxian_D47$D47_high)
-tix = seq(floor(min(yext * 100)), ceiling(max(yext * 100)), by = 1) / 100
+yext = range(fuxian_D47$temp.low, fuxian_D47$temp.high)
+tix = seq(floor(min(yext)-4), ceiling(max(yext)+2), by = 5)
 D47c.rs = cbind(fuxian_D47$age,
-                1 + (fuxian_D47$D47 - min(tix)) / diff(range(tix)),
-                1 + (fuxian_D47$D47_low - min(tix)) / diff(range(tix)),
-                1 + (fuxian_D47$D47_high - min(tix)) / diff(range(tix)))
+                1 + (fuxian_D47$temp - min(tix)) / diff(range(tix)),
+                1 + (fuxian_D47$temp.low - min(tix)) / diff(range(tix)),
+                1 + (fuxian_D47$temp.high - min(tix)) / diff(range(tix)))
 arrows(D47c.rs[, 1], D47c.rs[, 3], D47c.rs[, 1], D47c.rs[, 4], 
        col = "grey", angle = 90, length = 0, code = 0)
 points(D47c.rs[, 1], D47c.rs[, 2], col = "black", bg = pal[4], pch = 21, cex = 1.3)
 axis(2, 1 + (tix - min(tix)) / diff(range(tix)), tix)
-mtext(expression(Delta[47]*" (\u2030)"), 2, line = 2.5, at = 1.5)
+mtext(expression(paste("T (", degree, "C)")), 2, line = 2.5, at = 1.5)
 
 yext = range(fuxian$MS)
 tix = seq(floor(min(yext)-1), ceiling(max(yext)+1), by = 10)

@@ -4,9 +4,8 @@ source("code/constructors.R")
 source("code/helpers.R")
 
 ### load and groom data ----
-clp = read_csv("data/CLP_data/loess_glacial.csv") |> 
-  filter(section == "Fuxian")
-D47 = read_csv("data/CLP_data/D47.csv")
+clp = read.csv("data/CLP_data/fuxian_stable_isotope.csv") 
+D47 = read.csv("data/CLP_data/fuxian_D47.csv")
 d13a = read_csv("data/global_data/d13Ca_tipple.csv") # Tipple et al. (2010)
 ice_sheet = read_xlsx("data/global_data/ice_forcing_stap_2018.xlsx", sheet = 2) # Stap et al. (2018)
 ice_sheet = ice_sheet[2:nrow(ice_sheet),1:2]
@@ -53,10 +52,11 @@ d = list(ai = ages, dt = dt, d13Ca = d13Ca, R_ice = R_LI,
 parms = c("pCO2", "MAT", "PCQ_to", "tsc", "MAP", "PCQ_pf",
           "Tsoil", "S_z", "f_R", "spre", "pore", "temp_diff")
 
-system.time({post.ts = jags.parallel(d, NULL, parms, "code/models/time_series_06052025.R", 
+system.time({post.ts = jags.parallel(d, NULL, parms, "code/models/time_series.R", 
                         n.iter = 2e5, n.chains = 3, n.burnin = 5e4)})
-
 View(post.ts$BUGSoutput$summary)
+traceplot(post.ts, varname = "pCO2")
+
 save(post.ts, file = "out/ts_fuxian_D47_MS_2e5.rda")
 for (i in 1:length(parms)) {
   name = parms[i]
@@ -64,4 +64,19 @@ for (i in 1:length(parms)) {
            xlab = "Age (Ma)", ylab = name, mgp = c(2, .8, 0))
 }
 
-# load("out/ts_fuxian_D47_MS_ECS_1e5.rda")
+load("out/ts_fuxian_ECS_8e5.rda")
+post_data = data.frame(age = ages)
+for (i in 1:length(parms)) {
+  name = parms[i]
+  name_sd = paste0(parms[i], "_sd")
+  name_rhat = paste0(parms[i], "_rhat")
+  name_eff = paste0(parms[i], "_n.eff")
+  for (p in 1:nrow(post_data)) {
+    post_data[[name]][p] = mean(post.ts$BUGSoutput$sims.list[[name]][, p])
+    post_data[[name_sd]][p] = sd(post.ts$BUGSoutput$sims.list[[name]][, p])
+    rowname = paste0(name,"[", p, "]")
+    post_data[[name_rhat]][p] = post.ts$BUGSoutput$summary[rowname, "Rhat"]
+    post_data[[name_eff]][p] = post.ts$BUGSoutput$summary[rowname, "n.eff"]
+  }
+}
+write.csv(post_data, file = "out/ts_fuxian_D47_MS_ECS.csv")
