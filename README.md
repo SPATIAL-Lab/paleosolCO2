@@ -13,8 +13,8 @@ Scripts of the paleosol proxy system model (PSM)
 
 ## code/drivers/ 
 Scripts used to perform Bayesian inversion 
-- ** ms_driver** Load data and run the inversion of the PSM without the time-series model 
-- ** ts_driver** Load data and run the inversion of the PSM with the time-series model 
+- **ms_driver.R** Load data and run the inversion of the PSM without the time-series model 
+- **ts_driver.R** Load data and run the inversion of the PSM with the time-series model 
 
 ## code/plot/ 
 Scripts used to plot the figures in Da et al. (2025)
